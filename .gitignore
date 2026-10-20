@@ -1,0 +1,29 @@
+# dependencies and build output
+node_modules/
+dist/
+.vite/
+
+# secrets and local config
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials*.json
+.npmrc
+
+# archives and temporary files
+*.zip
+*.tgz
+*.log
+*.tmp
+.cache/
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
