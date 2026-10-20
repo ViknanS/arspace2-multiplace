@@ -27,3 +27,14 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# Xcode / iOS (never commit signing material or per-user state)
+ios/**/xcuserdata/
+ios/**/DerivedData/
+ios/**/build/
+*.xcuserstate
+*.mobileprovision
+*.provisionprofile
+*.cer
+*.certSigningRequest
+ExportOptions.plist

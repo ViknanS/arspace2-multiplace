@@ -306,11 +306,72 @@ The WebXR select event provides the input source's target ray. ARSpace converts 
 **36. How does each object stay fixed?**
 When locked, an XRAnchor is created at that object's pose (if the runtime grants anchors) and the object follows only its own anchor. Otherwise its transform stays fixed in the tracked reference space. Unlocking or removing deletes that object's anchor only.
 
-**37. Why isn't there multi-object camera AR on iPhone?**
-Safari doesn't implement WebXR AR, and AR Quick Look takes one model per launch without letting the web page add more. A native ARKit app could do it; inside this web architecture iPhone gets the 3D composer instead, and the UI says so.
+**37. Why isn't there multi-object camera AR on iPhone in the browser?**
+Safari doesn't implement WebXR AR, and AR Quick Look takes one model per launch without letting the web page add more. So iPhone gets a separate native ARKit app (Phase 6, below); in Safari it gets the 3D composer, and the UI says so.
 
 **38. Can a saved arrangement be restored in the same physical place later?**
 Not yet. Arrangements store relative positions and can be exported or opened in the composer, but putting them back on the same real spots needs relocalisation or persistent anchors.
 
 **39. Where did the new 3D models come from?**
 Four more from the Khronos glTF sample library (CC BY 4.0) and ten procedural low-poly models built with three.js and exported as GLB (CC0). A unit test checks every product has a valid GLB and that no two products share the same file.
+
+
+---
+
+# Phase 6: Native iPhone MultiPlace, wall placement, duplicate and undo
+
+## What it adds
+
+- **Native iPhone app** (`ios/ARSpaceMultiPlace`, Swift + SwiftUI + ARKit + RealityKit): one live camera session where you pick Lamp → Place & Lock → Chair → Place & Lock → Table → Place & Lock and walk around all three. SwiftUI controls sit over a RealityKit `ARView`: top bar (ARSpace MultiPlace · Tracking · Objects Placed · Exit AR), bottom sheet (selected object, actions, furniture carousel, Objects in Room · Undo · Clear Room).
+- **Wall placement** on both Android (WebXR) and iPhone (ARKit vertical planes): wall light, framed painting and wall clock hang flat on a detected wall, facing the room.
+- **Place & Lock** in one tap, **Duplicate**, **Undo**, carousel **search** and "+ Add another".
+- **21 models**, each also converted to **USDZ** (Blender) and validated (OpenUSD) for RealityKit; one shared catalog for the website, SmartFit and the app.
+
+## Technical contribution
+
+| Problem | How it's solved |
+|---|---|
+| Quick Look can't show custom buttons or several objects | Don't touch Quick Look. Build a native SwiftUI + RealityKit app with its own camera screen and controls |
+| RealityKit can't load glTF | Convert every GLB to USDZ with Blender's USD exporter; validate with OpenUSD (up axis, metres, shaders, packaged textures, size vs glTF) — 21/21 valid |
+| Telling floors from walls | A hit's pose has +Y along the surface normal: n.y ≥ 0.8 → floor, |n.y| ≤ 0.35 → wall. Wall yaw = atan2(n.x, n.z) so the model's front faces out |
+| A wall item must sit flush | Its pivot is the centre of its back (min z = 0), not its floor centre |
+| Each object locked independently on iPhone | Lock adds an `ARAnchor` at that object's transform and parents it to `AnchorEntity(anchor:)`; unlock removes only that anchor |
+| Undo without breaking anchors | Snapshot before each command; undo diffs the snapshot and rebuilds/re-anchors only the objects that changed; IDs never reused |
+| Same logic on two platforms | `objectManager.js` (web) and `SceneManager.swift` (iOS) implement the same states and rules, each with its own unit tests |
+
+## Demonstration script (about 2 minutes, iPhone)
+
+1. Open **ARSpace** on the iPhone (installed from Xcode). "This is a native ARKit app, because Safari can't do multi-object AR."
+2. **Start MultiPlace AR**. Point at the floor until "Surface Found".
+3. Tap **Floor Lamp** in the bottom bar → **Place & Lock**. "Locked — it has its own ARKit anchor."
+4. Swipe the bar → **Modern Accent Chair** → Place & Lock beside the lamp. "The camera never closed and the lamp is still there."
+5. **Coffee Table** → Place & Lock. Point to **Objects Placed: 3**. Walk around all three.
+6. Tap the chair → **Unlock** → **Move** → new spot → **Place & Lock**. "Only the chair moved."
+7. Lamp → **Duplicate**, then remove one lamp. "Each copy is independent."
+8. **Framed Wall Painting** → aim at a wall → "Wall Found" → Place & Lock. "Wall items use vertical plane detection."
+9. **Undo**, **Objects in Room**, **Exit AR** → export the arrangement.
+
+Android version: same steps on the MultiPlace page in Chrome (WebXR).
+
+## Viva questions (Phase 6)
+
+**40. Why a native app instead of modifying AR Quick Look?**
+Quick Look is a system viewer. A web page can only hand it one model file; it can't add buttons, a carousel or more objects. A native app owns the camera screen, so it can.
+
+**41. Can the Swift app run from the GitHub Pages website?**
+No. It's an iOS app built and signed with Xcode and installed on the phone. GitHub Pages hosts only the website.
+
+**42. How do you load the same furniture in RealityKit?**
+RealityKit needs USD/USDZ, so `tools/usdz/convert.py` converts each GLB with Blender and `validate.py` checks it with OpenUSD. The app's `catalog.json` is generated from the website's `products.js`.
+
+**43. How does the app know whether the reticle is on a wall?**
+ARKit raycast results on planes have their +Y axis along the plane normal. If the normal is nearly horizontal it's a wall; the normal is flipped to face the camera, and the yaw `atan2(n.x, n.z)` turns the model's front to face the room.
+
+**44. What does an ARAnchor give you over just storing a position?**
+ARKit keeps refining an anchor's pose as it learns more of the room, so the object attached to it stays on the same real spot; a raw world position would drift when ARKit corrects its map.
+
+**45. What happens if tracking is lost?**
+The top bar shows Tracking: Limited or Lost with the reason; objects stay attached to their anchors; after an interruption ARKit tries to relocalise so they return to their spots.
+
+**46. Has the iPhone app been tested?**
+Its scene logic has XCTest unit tests and the Swift syntax was checked, but it was written without Xcode, so building it, running the tests and the physical iPhone checklist (DEVICE_TESTING.md, I1–I14) are still to do.

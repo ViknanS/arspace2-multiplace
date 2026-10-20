@@ -151,6 +151,52 @@ export const BUILDERS = {
     ring.position.y = 0.24;
     return group('Wooden stool', cyl(0.175, 0.17, 0.04, mat.oak(), 0, 0.63, 0, 40), legs, ring);
   },
+  // ---- wall items: origin at the back-centre (on the wall), front facing +Z
+  'wall-painting': () => {
+    const W = 0.7, H = 0.5, D = 0.035, f = 0.03;
+    const frame = [
+      box(W, f, D, mat.walnut(), 0, H / 2 - f / 2, D / 2),
+      box(W, f, D, mat.walnut(), 0, -H / 2 + f / 2, D / 2),
+      box(f, H - 2 * f, D, mat.walnut(), -W / 2 + f / 2, 0, D / 2),
+      box(f, H - 2 * f, D, mat.walnut(), W / 2 - f / 2, 0, D / 2),
+    ];
+    const paint = (c) => new THREE.MeshStandardMaterial({ name: 'Paint', color: c, roughness: 0.9 });
+    const cw = W - 2 * f, ch = H - 2 * f, z = 0.02;
+    const art = [
+      box(cw, ch, 0.01, paint(0xf1ead9), 0, 0, z), // canvas
+      box(cw * 0.42, ch * 0.55, 0.004, paint(0x2f4f8f), -cw * 0.2, ch * 0.12, z + 0.007),
+      box(cw * 0.3, ch * 0.32, 0.004, paint(0xd98b3a), cw * 0.22, -ch * 0.18, z + 0.008),
+      box(cw * 0.7, ch * 0.06, 0.004, paint(0x1d1d24), 0, -ch * 0.36, z + 0.007),
+    ];
+    const sun = cyl(0.07, 0.07, 0.004, paint(0xc7463d), cw * 0.25, ch * 0.22, z + 0.009, 32);
+    sun.rotation.x = Math.PI / 2;
+    return group('Wall painting', frame, art, sun);
+  },
+  'wall-clock': () => {
+    const R = 0.175, D = 0.045;
+    const rim = cyl(R, R, D, mat.black(), 0, 0, D / 2, 48);
+    rim.rotation.x = Math.PI / 2;
+    const face = cyl(R - 0.012, R - 0.012, 0.004, mat.white(), 0, 0, D + 0.001, 48);
+    face.rotation.x = Math.PI / 2;
+    const parts = [rim, face];
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      const long = i % 3 === 0;
+      const tick = box(long ? 0.012 : 0.006, long ? 0.035 : 0.02, 0.004, mat.black(), Math.sin(a) * (R - 0.04), Math.cos(a) * (R - 0.04), D + 0.004);
+      tick.rotation.z = -a;
+      parts.push(tick);
+    }
+    const hand = (len, w, a, z) => {
+      const h = box(w, len, 0.003, mat.black(), Math.sin(a) * len * 0.4, Math.cos(a) * len * 0.4, z);
+      h.rotation.z = -a;
+      return h;
+    };
+    parts.push(hand(0.09, 0.012, (10 / 12) * Math.PI * 2, D + 0.007), hand(0.13, 0.008, (2 / 12) * Math.PI * 2, D + 0.009));
+    const pin = cyl(0.01, 0.01, 0.006, mat.brass(), 0, 0, D + 0.011, 16);
+    pin.rotation.x = Math.PI / 2;
+    parts.push(pin);
+    return group('Wall clock', parts);
+  },
   sculpture: () => {
     const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(0.09, 0.028, 160, 20, 2, 3), mat.brass());
     knot.position.y = 0.25 + 0.15;

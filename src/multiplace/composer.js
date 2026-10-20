@@ -11,7 +11,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { createObjectManager } from './objectManager.js';
 import { applyTransform, createAssetManager } from './modelAssets.js';
-import { getProduct } from '../data/products.js';
+import { getProduct, surfaceOf } from '../data/products.js';
+
+const WALL_HEIGHT = 2.4;
 
 export function createComposer(container, { room, signal, onChange, onError }) {
   const manager = createObjectManager();
@@ -83,6 +85,21 @@ export function createComposer(container, { room, signal, onChange, onError }) {
       wall.position.set(x, h / 2, z);
       roomGroup.add(wall);
     }
+    // full-height "dollhouse" walls for wall items: single-sided and facing
+    // inwards, so the walls nearest the camera are see-through
+    const tall = new THREE.MeshStandardMaterial({ color: 0x2a3560, roughness: 0.9, transparent: true, opacity: 0.55, side: THREE.FrontSide });
+    for (const [w, x, z, ry] of [
+      [W, W / 2, 0, 0],
+      [W, W / 2, L, Math.PI],
+      [L, 0, L / 2, Math.PI / 2],
+      [L, W, L / 2, -Math.PI / 2],
+    ]) {
+      const wall = new THREE.Mesh(new THREE.PlaneGeometry(w, WALL_HEIGHT), tall);
+      wall.position.set(x, WALL_HEIGHT / 2, z);
+      wall.rotation.y = ry;
+      wall.name = 'wall';
+      roomGroup.add(wall);
+    }
     scene.add(roomGroup);
   }
 
@@ -138,18 +155,46 @@ export function createComposer(container, { room, signal, onChange, onError }) {
     p.userData.ring.visible = id === manager.selectedId;
   }
 
+  const releaseIds = (ids) => {
+    for (const id of ids) {
+      const p = pivots.get(id);
+      if (p) assets.release(p);
+      pivots.delete(id);
+    }
+  };
   manager.onChange((e) => {
     if (e.type === 'add') ensurePivot(manager.get(e.id));
-    if (e.type === 'remove' || e.type === 'clear') {
-      for (const id of e.ids ?? [e.id]) {
-        const p = pivots.get(id);
-        if (p) assets.release(p);
-        pivots.delete(id);
-      }
+    if (e.type === 'remove' || e.type === 'clear') releaseIds(e.ids ?? [e.id]);
+    if (e.type === 'restore') {
+      releaseIds(e.removed);
+      e.added.forEach((id) => ensurePivot(manager.get(id)));
     }
     pivots.forEach((_, id) => sync(id));
     onChange?.();
   });
+
+  /**
+   * The nearest wall to a floor point, and where a wall item on it sits:
+   * position on the wall plane at height y, yaw facing into the room.
+   */
+  function wallPose(x, z, y) {
+    const opts = [
+      { d: z, pos: { x, z: 0 }, yaw: 0 }, // back wall, faces +Z
+      { d: L - z, pos: { x, z: L }, yaw: Math.PI }, // front wall
+      { d: x, pos: { x: 0, z }, yaw: Math.PI / 2 }, // left wall, faces +X
+      { d: W - x, pos: { x: W, z }, yaw: -Math.PI / 2 }, // right wall
+    ].sort((a, b) => a.d - b.d)[0];
+    const along = (v, max) => Math.min(max - 0.2, Math.max(0.2, v));
+    const pos = opts.pos.z === 0 || opts.pos.z === L ? { x: along(opts.pos.x, W), z: opts.pos.z } : { x: opts.pos.x, z: along(opts.pos.z, L) };
+    return { position: { x: pos.x, y: Math.min(WALL_HEIGHT - 0.2, Math.max(0.3, y)), z: pos.z }, rotationY: opts.yaw };
+  }
+
+  /** Spread wall items along the back wall. */
+  function freeWallSpot() {
+    const n = manager.list().filter((o) => o.surface === 'wall').length;
+    const x = W / 2 + (n % 2 ? 1 : -1) * Math.ceil(n / 2) * 0.8;
+    return Math.min(W - 0.3, Math.max(0.3, x));
+  }
 
   /** Spread new items around the room centre so they don't all stack. */
   function freeSpot() {
@@ -160,7 +205,15 @@ export function createComposer(container, { room, signal, onChange, onError }) {
   }
 
   function add(productId, opts = {}) {
-    return manager.add(productId, { position: opts.position ?? freeSpot(), rotationY: opts.rotationY ?? 0, scale: opts.scale ?? 1, state: opts.locked ? 'locked' : 'placed' });
+    const product = getProduct(productId);
+    const surface = surfaceOf(product);
+    const state = opts.locked ? 'locked' : 'placed';
+    if (surface === 'wall') {
+      const p = opts.position;
+      const pose = p ? wallPose(p.x, p.z, p.y || product.wallHeight || 1.5) : wallPose(freeWallSpot(), 0, product.wallHeight || 1.5);
+      return manager.add(productId, { ...pose, scale: opts.scale ?? 1, state, surface });
+    }
+    return manager.add(productId, { position: opts.position ?? freeSpot(), rotationY: opts.rotationY ?? 0, scale: opts.scale ?? 1, state, surface });
   }
 
   // ---------------------------------------------------- pointer: select + drag
@@ -203,7 +256,7 @@ export function createComposer(container, { room, signal, onChange, onError }) {
       if (o.state === 'locked') return; // locked: select only
       setRay(e);
       if (raycaster.ray.intersectPlane(floorPlane, hitPt)) {
-        drag = { id, dx: o.position.x - hitPt.x, dz: o.position.z - hitPt.z, pointerId: e.pointerId };
+        drag = { id, dx: o.position.x - hitPt.x, dz: o.position.z - hitPt.z, pointerId: e.pointerId, recorded: false };
         controls.enabled = false;
         el.setPointerCapture(e.pointerId);
       }
@@ -216,11 +269,20 @@ export function createComposer(container, { room, signal, onChange, onError }) {
       if (!drag) return;
       setRay(e);
       if (!raycaster.ray.intersectPlane(floorPlane, hitPt)) return;
-      manager.setPosition(drag.id, {
-        x: Math.min(W, Math.max(0, hitPt.x + drag.dx)),
-        y: 0,
-        z: Math.min(L, Math.max(0, hitPt.z + drag.dz)),
-      });
+      if (!drag.recorded) {
+        manager.checkpoint(); // one undo step per drag
+        drag.recorded = true;
+      }
+      const o = manager.get(drag.id);
+      const x = Math.min(W, Math.max(0, hitPt.x + drag.dx));
+      const z = Math.min(L, Math.max(0, hitPt.z + drag.dz));
+      if (o?.surface === 'wall') {
+        // wall items slide along the nearest wall, keeping their height
+        const pose = wallPose(hitPt.x, hitPt.z, o.position.y);
+        manager.setPosition(drag.id, pose.position, { rotationY: pose.rotationY });
+      } else {
+        manager.setPosition(drag.id, { x, y: 0, z });
+      }
     },
     { signal },
   );
@@ -278,14 +340,18 @@ export function createComposer(container, { room, signal, onChange, onError }) {
       buildRoom();
       resetCamera();
       manager.list().forEach((o) => {
-        if (o.position.x > W || o.position.z > L) {
+        if (o.surface === 'wall' || o.position.x > W || o.position.z > L) {
           const wasLocked = o.state === 'locked';
           if (wasLocked) manager.unlock(o.instanceId);
-          manager.setPosition(o.instanceId, { x: Math.min(W, o.position.x), y: 0, z: Math.min(L, o.position.z) });
+          if (o.surface === 'wall') {
+            const pose = wallPose(Math.min(W, o.position.x), Math.min(L, o.position.z), o.position.y);
+            manager.setPosition(o.instanceId, pose.position, { rotationY: pose.rotationY });
+          } else manager.setPosition(o.instanceId, { x: Math.min(W, o.position.x), y: 0, z: Math.min(L, o.position.z) });
           if (wasLocked) manager.lock(o.instanceId);
         }
       });
     },
+    wallPose,
     get room() {
       return { width: W, length: L };
     },

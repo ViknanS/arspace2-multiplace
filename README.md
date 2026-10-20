@@ -21,12 +21,12 @@ It also includes **SmartFit**, an intelligent furniture fit and walkability anal
 Two further modules complete the pipeline:
 
 - **Fix Position** — a custom WebXR AR mode (on browsers that support it) where you place furniture on your floor, lock it to that tracked spot, walk around it, unlock it to move it, or reset.
-- **MultiPlace** — several furniture objects in one AR session, each placed, locked, unlocked, moved, rotated, resized or removed on its own, chosen from a swipeable picker; plus a camera-free 3D room composer for iPhone and desktop.
+- **MultiPlace** — several furniture objects in **one** live AR session, each placed, locked, unlocked, moved, rotated, resized, duplicated or removed on its own, chosen from a large swipeable furniture bar inside the camera view. Floor items go on floors and tabletops; wall items (wall light, painting, clock) hang on detected walls. Undo, Clear Room and an Objects in Room panel are built in. Android uses custom WebXR in the browser; **iPhone uses a separate native app** (Swift, SwiftUI, ARKit, RealityKit) in [`ios/`](ios/README.md), because Safari has no WebXR AR. A camera-free 3D room composer works everywhere.
 - **AutoGrid** — measure the room by capturing its four floor corners in AR (Android WebXR) or by typing the dimensions (any device), generate a proportional floor grid, and open the result in SmartFit. Plans can be saved, loaded, renamed, deleted, exported and imported.
 
 **Room Measurement → Floor Grid → Furniture Arrangement → Collision Detection → Walkability Analysis → AR Preview → World-Locked Placement → Multi-Object Room Composition.**
 
-The catalog has **19 real 3D models** across Seating, Tables, Storage, Lighting and Decor (9 from the Khronos glTF sample library, 10 procedural models built for this project).
+The catalog has **21 real 3D models** across Seating, Tables, Storage, Lighting and Decor (9 from the Khronos glTF sample library, 12 procedural models built for this project), including 3 wall items. Every model also ships as a validated USDZ for the iPhone app.
 
 It is a static site: no backend, no database, no paid service.
 
@@ -76,10 +76,12 @@ Shoppers and homeowners struggle to picture how furniture and decor will look in
 | AutoGrid grid | 25 / 50 / 100 cm spacing (default 50), partial edge cells hatched and described, show/hide, zoom in/out, pan when zoomed, reset view, edit dimensions, regenerate. Drawn in real centimetres, so a 5 × 3 m room is visibly wider than a 3 × 3 m one. |
 | Shared room plan | One plan (schema v1, metres) is the source of truth for AutoGrid and SmartFit, kept in memory and mirrored to localStorage. Edits on either page show on the other. SmartFit uses the plan's grid spacing, can snap furniture edges to it, and keeps its 5 cm walkway grid independently. |
 | Room plans | Save, Load, Rename, Delete, New plan, Export JSON, Import JSON. Validation on every read, confirmation before overwriting a different plan with the same name or discarding unsaved changes, corrupted data kept as a backup instead of erased, storage-full and blocked-storage messages. |
-| **MultiPlace AR** (custom WebXR) | One immersive-ar session, one three.js scene, many objects. Horizontal, swipeable object picker with thumbnails and category chips at the bottom of the camera view. Pick an item → it previews on the reticle → **Place** → **Lock Position**. Pick more items without leaving AR; locked items stay put. Tap an object (raycast) or use the **Objects (n)** panel to select it, then **Unlock**, **Move**, rotate ±15°, resize 50–150 % (100 % = true size), **True size**, **Remove**. **Clear entire room** needs a second tap. Each locked object gets its own WebXR anchor when the runtime grants anchors. |
+| **MultiPlace AR** (custom WebXR, Android) | One immersive-ar session, one three.js scene, many objects. Top bar: **ARSpace MultiPlace · Tracking · Objects Placed · Exit AR**. Bottom: a translucent sheet with the selected object, its actions, a large swipeable furniture bar (thumbnails, names, search, category chips, "+ Add another" for copies) and **Objects in Room · Undo · Clear Room**. Pick an item → it previews on the reticle → **Place & Lock** (or Place, then Lock). Pick more items without leaving AR; locked items stay put. Tap an object (raycast) or use the Objects in Room panel to select it, then **Unlock**, **Move**, rotate ±15°, resize 50–150 % (100 % = true size), **True size**, **Duplicate**, **Remove**. **Clear Room** needs a second tap; **Undo** reverses the last edit (including Clear Room). Each locked object gets its own WebXR anchor when the runtime grants anchors. |
+| **Floor and wall placement** | Hit-test poses are classified by their surface normal: upward → floor/tabletop, near-horizontal → wall. Floor items follow only horizontal hits; wall items (Copper Barn Wall Light, Framed Wall Painting, Wall Clock) follow only vertical hits and turn to face out of the wall, and can't be spun into it. The status line says when the reticle is on the wrong kind of surface, and after 8 s without any wall it says wall placement may be unsupported on that phone. Product-page AR (model-viewer) also opens wall items with `ar-placement="wall"`. |
+| **Native iPhone app** (`ios/`) | SwiftUI + ARKit + RealityKit: one `ARWorldTrackingConfiguration` session with horizontal and vertical plane detection, the same carousel / Place & Lock / per-object `ARAnchor` / unlock / move / duplicate / undo / wall-placement workflow, USDZ models converted from the same GLBs, and the same catalog (generated from `products.js`). Built and installed with Xcode; it does not run in Safari and is not deployed by GitHub Pages. See [ios/README.md](ios/README.md). |
 | MultiPlace object model | Every instance has a unique ID (`chair-001`, `chair-002`…), its own position, rotation, scale and lock state. Only one object (a new preview or one being moved) ever follows the reticle. Switching products discards only an unplaced preview. A model that fails to load is removed without touching the rest. Models are cached and cloned per instance. |
 | **3D room composer** | The same multi-object workflow without the camera, labelled as not AR: room sized from the shared plan, add from the picker, click to select, drag to move, lock/unlock, rotate, resize, remove, clear. Export/import arrangement JSON, send floor furniture to the SmartFit plan, load the plan's furniture back. Used on iPhone (Safari has no WebXR AR) and desktop. |
-| Catalog | 19 products with ID, name, category, model, thumbnail, width/depth/height, description, source and licence. The same data feeds the viewer, AR, SmartFit (14 floor-standing items) and MultiPlace. |
+| Catalog | 21 products with ID, name, category, placement (floor / wall), model, thumbnail, width/depth/height, description, source and licence. The same data feeds the viewer, AR, SmartFit (14 floor-standing items), MultiPlace and the iPhone app (`npm run ios:catalog` exports it as `catalog.json`). |
 | Error handling | Missing/corrupt model, slow network (message after 25 s), offline/online notices, GPU context loss, AR session failure or denied camera, unknown routes, rapid switching between objects. |
 | Accessibility | Keyboard focus rings, skip link, ARIA states on toggles, `prefers-reduced-motion` respected (no auto-rotate, no animations). |
 
@@ -87,7 +89,8 @@ Shoppers and homeowners struggle to picture how furniture and decor will look in
 
 - **Vite 6** (build tool and dev server), **vanilla JavaScript ES modules**, HTML5, CSS3
 - **@google/model-viewer 4.1.0** (built on **three.js 0.172**) for 3D rendering and AR launch
-- **glTF 2.0 binary (`.glb`)** models; iOS USDZ is generated on the fly by model-viewer from the GLB
+- **glTF 2.0 binary (`.glb`)** models; iOS USDZ is generated on the fly by model-viewer from the GLB for AR Quick Look
+- **Native iPhone app:** Swift 5, SwiftUI, ARKit (world tracking, plane detection, raycasting, `ARAnchor`), RealityKit (`ARView`, `AnchorEntity`, USDZ loading); USDZ files converted with Blender (`bpy`) and validated with OpenUSD (`usd-core`)
 - **qrcode-generator** for the "open on your phone" QR code; **Inter** font (self-hosted); Lucide-style inline SVG icons
 
 > Why model-viewer 4.1.0 and not the newest 4.4.0? In 4.2–4.4, changing `scale` or `orientation` outside an AR session throws an internal error (`ARRenderer.onUpdateScene`). 4.1.0 does not have that bug and supports every feature ARSpace uses. The version is pinned in `package.json`.
@@ -125,7 +128,7 @@ arspace/
 ├── vercel.json
 ├── public/
 │   ├── favicon.svg
-│   ├── models/               6 real .glb files (see ATTRIBUTIONS.md)
+│   ├── models/               21 real .glb files (see ATTRIBUTIONS.md)
 │   └── thumbs/               catalog thumbnails rendered from those models
 ├── src/
 │   ├── main.js               hash router, page lifecycle, lazy-loads model-viewer
@@ -152,7 +155,8 @@ arspace/
 │   ├── multiplace/
 │   │   ├── objectManager.js  PlacedObjectManager: instances, IDs, lock/unlock/move/remove (pure, tested)
 │   │   ├── modelAssets.js    ModelAssetManager: cached loading + safe cloning
-│   │   ├── ui.js             swipeable object picker + objects panel (shared by AR and composer)
+│   │   ├── ui.js             swipeable furniture bar (search, categories) + objects panel (AR and composer)
+│   │   ├── surface.js        floor / wall classification of hit-test poses (pure, tested)
 │   │   ├── composer.js       camera-free 3D room composer (three.js + OrbitControls)
 │   │   └── arrangement.js    arrangement export/import (pure, tested)
 │   ├── autogrid/
@@ -171,8 +175,15 @@ arspace/
 ├── tests/
 │   ├── *.test.js             unit tests (npm test): geometry, placement, measurement, grid, storage, integration
 │   └── browser/              Playwright suites (npm run test:browser) + xrmock.js WebXR stand-in
+├── ios/                      native iPhone app (SwiftUI + ARKit + RealityKit), see ios/README.md
+│   ├── README.md             build, sign, run, test; physical-device checklist
+│   └── ARSpaceMultiPlace/
+│       ├── ARSpaceMultiPlace.xcodeproj
+│       ├── ARSpaceMultiPlace/        app sources, catalog.json, Models/*.usdz, Thumbnails/*.png
+│       └── ARSpaceMultiPlaceTests/   XCTest unit tests
 ├── DEVICE_TESTING.md         Android / iPhone / desktop hands-on checklist
-├── tools/                    procedural furniture generator (three.js → GLB)
+├── tools/                    procedural furniture generator (three.js → GLB), iOS catalog export,
+│                             usdz/ (GLB → USDZ conversion, validation, thumbnails)
 ├── .github/workflows/deploy.yml  GitHub Pages deployment
 ├── README.md
 ├── ATTRIBUTIONS.md
@@ -250,11 +261,15 @@ After Fix, new reticle positions are ignored; nothing is camera-relative. Unlock
 
 **Selection.** A screen tap that isn't on a button arrives as a WebXR `select` event. Its target ray (`event.frame.getPose(inputSource.targetRaySpace, refSpace)`) is raycast against the placed objects; the nearest hit is selected. If nothing is hit, the tap places the object that is following the reticle.
 
+**Floor and wall surfaces.** A WebXR hit-test pose has its +Y axis along the detected surface's normal. `multiplace/surface.js` classifies it: normal.y ≥ 0.8 → floor/tabletop, |normal.y| ≤ 0.35 → wall. A wall item's yaw is `atan2(n.x, n.z)`, so its front (+Z) faces out of the wall; its pivot is the centre of its back, so it sits flush. Chrome on ARCore phones is expected to report vertical planes to WebXR hit testing, but this depends on the phone and is **not yet verified on a device** — if a phone never reports a wall, the app says wall placement may be unsupported there.
+
+**Duplicate and Undo.** Duplicate copies the selected object as a new, unlocked instance beside it (to its right along the floor or the wall). Every editing command stores a snapshot first (up to 30); Undo restores the previous snapshot and rebuilds only the objects that changed, re-anchoring any that are locked again. Instance IDs are never reused.
+
 **Without DOM Overlay** the picker can't be shown inside AR, so taps cycle: place → lock → add another of the product chosen before starting.
 
 **Arrangements.** When a session ends, the placed objects are kept as an arrangement (product IDs, instance IDs, positions relative to the group centre, rotations, scales, lock flags) that can be exported as JSON or opened in the 3D composer. Reopening AR does not restore objects to the same physical spots; that would need relocalisation, which isn't implemented.
 
-**iPhone.** Safari doesn't provide WebXR AR, and AR Quick Look displays one model per launch with no way for a web page to add more. iPhone therefore gets the 3D room composer (clearly labelled as not camera AR) plus the existing single-object Quick Look.
+**iPhone.** Safari doesn't provide WebXR AR, and AR Quick Look displays one model per launch with no way for a web page to add buttons or more models — so ARSpace does not try to modify Quick Look. Genuine multi-object AR on iPhone is the separate **native app** in [`ios/`](ios/README.md): SwiftUI controls over a RealityKit `ARView`, one ARKit world-tracking session with horizontal and vertical plane detection, raycast placement, a per-object `ARAnchor` on lock, and the same carousel, Place & Lock, Unlock/Move, Duplicate, Undo and wall placement. It is built and installed with Xcode; it is not a website. In Safari, iPhone still gets the 3D room composer (labelled as not camera AR) and single-object Quick Look.
 
 ## AutoGrid: measurement and grid
 
@@ -376,7 +391,8 @@ Testing over `http://<your-Mac-IP>:5173` from a phone is not reliable for AR: We
 | macOS / Windows / Linux browsers | Yes | No — explained, QR code to phone | No — explained | No — explained | Yes | No — explained | Yes |
 | Android Chrome, ARCore device, https | Yes | WebXR or Scene Viewer | Yes, if `immersive-ar` is reported | Yes, if `immersive-ar` is reported | Yes | Yes, if `immersive-ar` + hit test | Yes |
 | Android, other browsers | Yes | Scene Viewer if supported | Only with WebXR AR | Only with WebXR AR | Yes | Same | Yes |
-| iPhone / iPad Safari | Yes | AR Quick Look (one model per launch) | No — explained | No — explained | Yes | No — explained | Yes |
+| iPhone / iPad Safari | Yes | AR Quick Look (one model per launch) | No — explained | No — explained; native app instead | Yes | No — explained | Yes |
+| iPhone XS / XR or newer, iOS 17+, **native ARSpace MultiPlace app** (Xcode build) | — | — | — | Yes: ARKit, floor + wall (not yet device-tested) | — | — | — |
 | Any page over plain http (not localhost) | Yes | Limited | No (WebXR needs https) | No | Yes | No | Yes |
 
 ## Testing performed
@@ -386,15 +402,20 @@ Run in this environment on the final code. "Mocked WebXR" means the suites repla
 | Command / suite | Result |
 |---|---|
 | `npm install`, `npm run build`, `npm run dev`, `npm run preview` | Passed |
-| `npm test` — 73 unit tests: SmartFit geometry (13), Fix Position state machine (11), measurement geometry (13), grid generation (7), plan storage (11), AutoGrid→SmartFit integration (5), MultiPlace object manager + arrangement + catalog (13, incl. the 16-step lamp/chair/table scenario, unique IDs, every GLB present and valid, no duplicate model files) | **73 / 73 passed** |
-| Browser: original ARSpace features (home, catalog, filters, search, 6 models, viewer controls, reset, variants, AR attributes, desktop AR dialog, Android Scene Viewer intent, errors, quick switching, upload) | 41 / 42 (touch-rotation item below) |
+| `npm test` — 80 unit tests: SmartFit geometry (13), Fix Position state machine (11), measurement geometry (13), grid generation (7), plan storage (11), AutoGrid→SmartFit integration (5), MultiPlace object manager + arrangement + catalog (13, incl. the 16-step lamp/chair/table scenario, unique IDs, every GLB present and valid, no duplicate model files), MultiPlace walls / duplicate / undo (7: the 20-step acceptance scenario at data level, floor/wall/ceiling classification and wall yaw, wall items can't spin, wall duplicate slides along the wall, undo of every command incl. clear, bounded history, wall items keep height in arrangements, wall GLBs face +Z with their back at z = 0, every product has a USDZ twin, iOS catalog in sync with the website catalog) | **80 / 80 passed** |
+| Browser: original ARSpace features (home, catalog of 21, filters, search, models, viewer controls, reset, variants, AR attributes, desktop AR dialog, Android Scene Viewer intent, errors, quick switching, upload) | 42 / 44 (the two emulated touch-rotation checks, below) |
 | Browser: SmartFit (all previous checks + emulated touch drag of furniture + page scroll from empty floor) | **34 / 34 passed** |
 | Browser: Fix Position, mocked WebXR (button gating, session features requested, scanning/surface messages, place disabled without surface, preview follows reticle, Fix creates anchor, object ignores later reticle and camera movement, follows anchor updates, tracking loss and recovery, rotate, Unlock releases anchor, re-fix, Reset, Exit cleanup, second session, system-ended session, no-anchor session-local mode, tap fallback without DOM Overlay, permission denied, hit test unsupported, desktop and iPhone explanations) | **30 / 30 passed** |
 | Browser: AutoGrid + plans + scan, mocked WebXR (grid counts for 25/50/100 cm, partial cells, proportional drawing, invalid input, zoom/pan/reset, grid toggle, hand-off to SmartFit, furniture/rotation/snap on generated plan, SmartFit edits sync back, save/new/load/rename/delete, export/import, broken import, reload persistence, corrupted storage recovery, corner capture with duplicate rejection, live readout, undo, reset, exit, rectangular/irregular/invalid scans, AR result to SmartFit, iPhone manual flow, mobile overflow) | **52 / 52 passed** |
-| Browser: MultiPlace (desktop composer: picker scroll and filters, three locked objects, unlock/drag only one, locked drag refused, remove, unique second lamp, scale clamp, export/import, send to and load from SmartFit, failed model isolation, clear; mocked WebXR: one session, Surface Found / Ready to Place / Object Placed — Lock Position messages, per-object anchors, adding items without restarting, camera and reticle movement don't move locked items, anchor correction moves one item, objects panel, unlock/move/re-lock one item, raycast tap selection, remove, second instance ID, preview discard on switch, tap-to-place, failed model, two-tap clear, exit cleanup, arrangement to composer, no-DOM-overlay fallback; iPhone explanation + composer) | **58 / 58 passed** |
+| Browser: MultiPlace — desktop composer (picker scroll, filters and search, three locked objects, unlock/drag only one, locked drag refused, remove, unique second lamp, scale clamp, export/import, send to and load from SmartFit, failed model isolation, clear + undo, wall painting on a wall at 1.5 m, wall item can't spin, duplicate + undo) and **mocked WebXR, the 20-step acceptance scenario**: lamp place + lock, chair from the in-AR carousel without restarting, Place & Lock, table, three locked objects with three anchors, camera + reticle movement leave all three in place, anchor correction moves one, tap-select the chair, unlock only it, move, re-lock, lamp and table unaffected, duplicate the lamp, delete one lamp (copy stays), undo re-anchors it, wall lamp refused over the floor and placed on a vertical hit facing out of the wall, carousel search / no match / horizontal scroll / highlight / "+ Add another", tap-to-place, failed model, two-tap Clear Room, exit removes overlay, canvas, hit-test source and every anchor; no-DOM-overlay fallback; iPhone explanation pointing to the native app + composer | **82 / 82 passed** |
+| iOS USDZ models — `npm run ios:validate` (OpenUSD: default prim, Y-up, metres, UsdPreviewSurface-only shaders, packaged PNG/JPEG textures, usdz/material/reference validators, size equals the glTF size), plus a visual check of re-imported renders | **21 / 21 valid** |
+| iOS Swift sources — syntax check with tree-sitter-swift (11 files) | No syntax errors. **Not compiled**: no Xcode or Swift compiler in this environment |
+| iOS XCTest suite (`SceneManagerTests`, `SurfaceClassifierTests`, `CatalogTests`) and Xcode build | **Not run — needs Xcode on a Mac.** See ios/README.md |
 | Touch rotation of the 3D viewer | **Flaky in emulation** — headless Chrome cancels synthetic touches on model-viewer; check on a real phone. Furniture touch-drag in SmartFit is now verified in emulation. |
 | **Real-device AR (View in my room, Fix Position, MultiPlace, AutoGrid scan) on Android** | **Pending — requires a compatible phone.** See DEVICE_TESTING.md. |
 | **iPhone AR Quick Look and touch interaction** | **Pending — requires a real iPhone/iPad.** |
+| **Native iPhone MultiPlace app (I1–I14)** | **Pending — requires Xcode and an iPhone (A12 or newer).** |
+| **Wall placement on a real Android phone (M17–M19)** | **Pending — depends on the phone reporting vertical planes to WebXR.** |
 | Measurement accuracy against a tape measure | **Pending — physical test.** |
 
 ## Known limitations
@@ -402,7 +423,7 @@ Run in this environment on the final code. "Mocked WebXR" means the suites repla
 - AR works only on AR-capable phones and tablets, not on laptops or desktops.
 - Scene Viewer and AR Quick Look are separate native screens: ARSpace's sliders, buttons and variant chips are not visible inside them.
 - Preview size and rotation sliders change the on-screen preview. In WebXR they carry into AR; Scene Viewer always opens the original file, so it shows the default finish, size and orientation.
-- Placement is on horizontal surfaces (floors, tables). Wall placement is not implemented. The Copper Barn Wall Light is therefore placed on a surface rather than mounted.
+- Product-page AR places floor items on horizontal surfaces and wall items (wall light, painting, clock) on walls via model-viewer's `ar-placement="wall"`; how well walls are detected depends on the phone.
 - Surface detection depends on the phone, lighting and surface texture; plain, white or glossy floors may not be detected.
 - Uploaded `.glb` files can only be previewed in 3D, not in AR, because native AR viewers cannot read local `blob:` URLs.
 - Some advanced material extensions (e.g. diffuse transmission on the plant leaves) may look simpler in AR viewers than in the browser.
@@ -419,12 +440,19 @@ Run in this environment on the final code. "Mocked WebXR" means the suites repla
 
 ### MultiPlace limitations
 
-- Multi-object camera AR needs WebXR AR (Chrome on ARCore Android over https). iPhone gets the 3D composer and single-object Quick Look.
-- Objects are placed on detected horizontal surfaces. There's no occlusion, so real furniture doesn't hide virtual objects, and virtual objects don't collide with each other in AR (SmartFit does the collision maths on the plan).
+- In the browser, multi-object camera AR needs WebXR AR (Chrome on ARCore Android over https). On iPhone it needs the native app (built with Xcode, A12 chip or newer, iOS 17+); Safari gets the 3D composer and single-object Quick Look.
+- Wall placement in the browser depends on the phone's WebXR hit test reporting vertical planes; it is not yet verified on a device. Wall items can't be rotated freely (they face out of the wall).
+- There's no occlusion, so real furniture doesn't hide virtual objects, and virtual objects don't collide with each other in AR (SmartFit does the collision maths on the plan).
 - Anchors last for one session. Arrangements can be exported, but reopening AR does not restore objects to the same physical spots.
 - About 5–10 objects is the target on a capable phone. Large textured models (e.g. the 7.8 MB barn light) cost more memory; ARSpace warns from 10 objects.
 - Sending composer furniture to SmartFit rounds rotations to 0° or 90° and skips tabletop and wall items.
 - The procedural models are simple low-poly pieces with designed (not real product) dimensions.
+
+### Native iPhone app limitations
+
+- Written on Linux without Xcode: Swift syntax was checked with a parser, but the app has **not been compiled, unit-tested in Xcode, or run on an iPhone yet**. Expect the first build to need small fixes. It must be built and signed with Xcode; it is not on the App Store and not deployed by GitHub Pages.
+- USDZ conversion simplifies some glTF materials (velvet sheen becomes a flat colour; transmissive glass becomes alpha-blended; anisotropy and iridescence are dropped). Shapes and sizes are unchanged.
+- No saved world maps: objects are not restored to the same physical spots in a new session. No people/object occlusion.
 
 ### SmartFit limitations
 

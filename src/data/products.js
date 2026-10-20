@@ -6,8 +6,13 @@
 //   dimsSource 'model'    measured from the .glb bounding box (not manufacturer data)
 //   dimsSource 'designed' the designed size of an ARSpace procedural model
 // floor: true when the item stands on the floor and can be planned in SmartFit.
+// placement: 'floor' for horizontal surfaces (floor or tabletop), 'wall' for
+//   items that hang on a vertical surface (wall lights, paintings, clocks).
+//   Wall models have their back at z = 0 and face +Z.
+// wallHeight: suggested centre height (m) for wall items in the 3D composer.
 
-const base = import.meta.env.BASE_URL; // keeps asset paths correct on Netlify, Vercel and GitHub Pages
+// keeps asset paths correct on Netlify, Vercel and GitHub Pages (plain Node, used by tools/, has no import.meta.env)
+const base = import.meta.env?.BASE_URL ?? './';
 
 export const CATEGORIES = [
   { id: 'all', label: 'All objects' },
@@ -185,10 +190,12 @@ export const PRODUCTS = [
     footprint: { w: 19, d: 23, h: 26 },
     dimsSource: 'model',
     floor: false,
+    placement: 'wall',
+    wallHeight: 1.9,
     source: { name: `${KHRONOS}: AnisotropyBarnLamp`, license: 'CC-BY-4.0' },
     summary: 'An industrial wall-mounted barn light with a brushed copper shade and exposed bulb.',
     description:
-      'The brushed copper uses an anisotropic material, so its highlights stretch and move as you orbit the camera, like real brushed metal. This is a wall fitting, but ARSpace places objects on horizontal surfaces, so in AR set it on a table or shelf to judge its size.',
+      'The brushed copper uses an anisotropic material, so its highlights stretch and move as you orbit the camera, like real brushed metal. It is a wall fitting: in AR, aim at a wall until the surface is detected and it mounts flat against it.',
     cameraOrbit: '25deg 70deg auto',
   }),
   P({
@@ -258,6 +265,36 @@ export const PRODUCTS = [
     description: 'A tabletop accent. Place it on the coffee table or dining table in MultiPlace.',
   }),
   P({
+    id: 'wall-painting',
+    name: 'Framed Wall Painting',
+    category: 'decor',
+    fileSize: '24 KB',
+    footprint: { w: 70, d: 4, h: 50 },
+    dimsSource: 'designed',
+    floor: false,
+    placement: 'wall',
+    wallHeight: 1.5,
+    source: PROC,
+    summary: 'An abstract painting in warm and deep-blue blocks, in a slim walnut frame.',
+    description: 'A 70 × 50 cm canvas. In AR, aim at a wall: it hangs flat against the wall at the point you choose.',
+    cameraOrbit: '0deg 85deg auto',
+  }),
+  P({
+    id: 'wall-clock',
+    name: 'Wall Clock',
+    category: 'decor',
+    fileSize: '56 KB',
+    footprint: { w: 35, d: 5, h: 35 },
+    dimsSource: 'designed',
+    floor: false,
+    placement: 'wall',
+    wallHeight: 1.8,
+    source: PROC,
+    summary: 'A 35 cm round clock with a black rim, white face and brass centre pin.',
+    description: 'A simple round wall clock. Use it to judge spacing above a sofa or desk.',
+    cameraOrbit: '0deg 85deg auto',
+  }),
+  P({
     id: 'sculpture',
     name: 'Abstract Sculpture',
     category: 'decor',
@@ -270,6 +307,11 @@ export const PRODUCTS = [
     description: 'A decorative statement piece for a sideboard, shelf or console.',
   }),
 ];
+
+/** 'wall' for items that hang on a vertical surface, otherwise 'floor'. */
+export function surfaceOf(product) {
+  return product?.placement === 'wall' ? 'wall' : 'floor';
+}
 
 export function getProduct(id) {
   return PRODUCTS.find((p) => p.id === id);

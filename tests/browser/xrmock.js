@@ -1,8 +1,17 @@
 (() => {
   const mat = (x, y, z) => new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1]);
+  // pose on a surface whose normal is n (+Y axis = n), like a real hit-test result
+  function surfaceMatrix(x, y, z, n) {
+    const l = Math.hypot(n.x, n.y, n.z) || 1; const Y = { x: n.x / l, y: n.y / l, z: n.z / l };
+    const ref = Math.abs(Y.y) < 0.9 ? { x: 0, y: 1, z: 0 } : { x: 1, y: 0, z: 0 };
+    let X = { x: ref.y * Y.z - ref.z * Y.y, y: ref.z * Y.x - ref.x * Y.z, z: ref.x * Y.y - ref.y * Y.x };
+    const xl = Math.hypot(X.x, X.y, X.z); X = { x: X.x / xl, y: X.y / xl, z: X.z / xl };
+    const Z = { x: X.y * Y.z - X.z * Y.y, y: X.z * Y.x - X.x * Y.z, z: X.x * Y.y - X.y * Y.x };
+    return new Float32Array([X.x, X.y, X.z, 0, Y.x, Y.y, Y.z, 0, Z.x, Z.y, Z.z, 0, x, y, z, 1]);
+  }
   class RigidT {
-    constructor(x = 0, y = 0, z = 0) {
-      this.position = { x, y, z, w: 1 }; this.orientation = { x: 0, y: 0, z: 0, w: 1 }; this.matrix = mat(x, y, z);
+    constructor(x = 0, y = 0, z = 0, n = null) {
+      this.position = { x, y, z, w: 1 }; this.orientation = { x: 0, y: 0, z: 0, w: 1 }; this.matrix = n ? surfaceMatrix(x, y, z, n) : mat(x, y, z);
       this.inverse = { matrix: mat(-x, -y, -z), position: { x: -x, y: -y, z: -z, w: 1 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };
     }
   }
@@ -54,7 +63,8 @@
         getHitTestResults() {
           if (!X.hit) return [];
           const h = { ...X.hit };
-          const r = { getPose() { return { transform: new RigidT(h.x, h.y, h.z) }; } };
+          // X.hit = { x, y, z, n?: {x,y,z} } — n is the surface normal (default: floor, +Y)
+          const r = { getPose() { return { transform: new RigidT(h.x, h.y, h.z, h.n || null) }; } };
           if (!cfg.noAnchors) r.createAnchor = () => {
             const a = { pos: { ...h }, deleted: false, anchorSpace: {}, delete() { if (!this.deleted) { this.deleted = true; X.deleted++; } } };
             a.anchorSpace.__anchor = a; X.anchors.push(a); return Promise.resolve(a);

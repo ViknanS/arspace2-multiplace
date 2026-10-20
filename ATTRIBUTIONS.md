@@ -21,7 +21,11 @@ are copied from each model's `metadata.json` in that repository.
 
 ### ARSpace procedural models (CC0)
 
-`stool`, `coffee-table`, `side-table`, `dining-table`, `desk`, `bookshelf`, `tv-unit`, `storage-cabinet`, `floor-lamp` and `sculpture` are original low-poly models created for this project with three.js (`tools/procedural-models.js`) and exported as GLB. They are released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/legalcode). Their dimensions are the designed sizes, not those of a real product.
+`stool`, `coffee-table`, `side-table`, `dining-table`, `desk`, `bookshelf`, `tv-unit`, `storage-cabinet`, `floor-lamp`, `sculpture`, `wall-painting` and `wall-clock` are original low-poly models created for this project with three.js (`tools/procedural-models.js`) and exported as GLB. They are released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/legalcode). Their dimensions are the designed sizes, not those of a real product.
+
+### iOS USDZ versions
+
+`ios/ARSpaceMultiPlace/ARSpaceMultiPlace/Models/*.usdz` are format conversions of the same models (Blender glTF import → USD export, `tools/usdz/convert.py`), for the native iOS app. Each keeps its original credit and licence above. Changes made by the conversion: materials are re-expressed as UsdPreviewSurface (velvet sheen becomes a flat colour, transmissive glass becomes alpha-blended glass, anisotropy and iridescence are dropped), base-colour factors are baked into texture copies, and textures are limited to 2048 px. Geometry and dimensions are unchanged. `ios/.../Thumbnails/*.png` are resized copies of the catalog thumbnails.
 
 The catalog thumbnails in `public/thumbs/` are renders of these same models, made with
 `<model-viewer>`'s `toBlob()` method, and carry the same licences.
@@ -32,6 +36,8 @@ The catalog thumbnails in `public/thumbs/` are renders of these same models, mad
 - [three.js](https://github.com/mrdoob/three.js) — MIT
 - [Vite](https://vitejs.dev) — MIT
 - three.js addons used: GLTFLoader, GLTFExporter (procedural models), OrbitControls, RoomEnvironment, SkeletonUtils
+- Native iOS app: Apple SwiftUI, ARKit and RealityKit (system frameworks)
+- Asset conversion and validation (build tools, not shipped in the website): [Blender](https://www.blender.org) `bpy` (GPL; used only as a converter), [OpenUSD](https://openusd.org) `usd-core` (Tomorrow Open Source Technology License), Pillow (HPND)
 - [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) — MIT
 - [Inter](https://rsms.me/inter/) via @fontsource-variable/inter — SIL Open Font License 1.1
 - Interface icons adapted from [Lucide](https://lucide.dev) — ISC

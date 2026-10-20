@@ -1,0 +1,472 @@
+{
+  "generatedFrom": "src/data/products.js",
+  "units": {
+    "footprint": "centimetres",
+    "wallHeight": "metres"
+  },
+  "categories": [
+    {
+      "id": "seating",
+      "label": "Seating"
+    },
+    {
+      "id": "tables",
+      "label": "Tables"
+    },
+    {
+      "id": "storage",
+      "label": "Storage"
+    },
+    {
+      "id": "lighting",
+      "label": "Lighting"
+    },
+    {
+      "id": "decor",
+      "label": "Decor"
+    }
+  ],
+  "products": [
+    {
+      "id": "chair",
+      "name": "Modern Accent Chair",
+      "category": "seating",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 83,
+        "d": 57,
+        "h": 69
+      },
+      "dimsSource": "model",
+      "wallHeight": null,
+      "summary": "An armless mid-century lounge chair with tufted velvet upholstery and tapered wooden legs.",
+      "source": {
+        "name": "Khronos glTF Sample Assets: SheenChair",
+        "license": "CC0-1.0"
+      },
+      "model": "chair.usdz",
+      "thumbnail": "chair.png"
+    },
+    {
+      "id": "sofa",
+      "name": "Curved Velvet Sofa",
+      "category": "seating",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 219,
+        "d": 102,
+        "h": 79
+      },
+      "dimsSource": "model",
+      "wallHeight": null,
+      "summary": "A long curved sofa in plush velvet on slim metal legs, in five fabric colours.",
+      "source": {
+        "name": "Khronos glTF Sample Assets: GlamVelvetSofa",
+        "license": "CC-BY-4.0"
+      },
+      "model": "sofa.usdz",
+      "thumbnail": "sofa.png"
+    },
+    {
+      "id": "silk-pouf",
+      "name": "Silk Pouf",
+      "category": "seating",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 61,
+        "d": 61,
+        "h": 20
+      },
+      "dimsSource": "model",
+      "wallHeight": null,
+      "summary": "A low, round tufted pouf in shimmering silk, usable as a footrest or floor cushion.",
+      "source": {
+        "name": "Khronos glTF Sample Assets: SpecularSilkPouf",
+        "license": "CC-BY-4.0"
+      },
+      "model": "silk-pouf.usdz",
+      "thumbnail": "silk-pouf.png"
+    },
+    {
+      "id": "stool",
+      "name": "Wooden Stool",
+      "category": "seating",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 37,
+        "d": 37,
+        "h": 65
+      },
+      "dimsSource": "designed",
+      "wallHeight": null,
+      "summary": "A round oak stool with splayed legs and a black metal footring.",
+      "source": {
+        "name": "ARSpace procedural model",
+        "license": "CC0-1.0"
+      },
+      "model": "stool.usdz",
+      "thumbnail": "stool.png"
+    },
+    {
+      "id": "coffee-table",
+      "name": "Coffee Table",
+      "category": "tables",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 100,
+        "d": 55,
+        "h": 45
+      },
+      "dimsSource": "designed",
+      "wallHeight": null,
+      "summary": "A rectangular oak coffee table with a lower shelf and slim black metal legs.",
+      "source": {
+        "name": "ARSpace procedural model",
+        "license": "CC0-1.0"
+      },
+      "model": "coffee-table.usdz",
+      "thumbnail": "coffee-table.png"
+    },
+    {
+      "id": "side-table",
+      "name": "Round Side Table",
+      "category": "tables",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 45,
+        "d": 45,
+        "h": 55
+      },
+      "dimsSource": "designed",
+      "wallHeight": null,
+      "summary": "A small walnut-top pedestal table on a weighted black base.",
+      "source": {
+        "name": "ARSpace procedural model",
+        "license": "CC0-1.0"
+      },
+      "model": "side-table.usdz",
+      "thumbnail": "side-table.png"
+    },
+    {
+      "id": "dining-table",
+      "name": "Dining Table",
+      "category": "tables",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 140,
+        "d": 80,
+        "h": 75
+      },
+      "dimsSource": "designed",
+      "wallHeight": null,
+      "summary": "A four-seat walnut dining table with square legs.",
+      "source": {
+        "name": "ARSpace procedural model",
+        "license": "CC0-1.0"
+      },
+      "model": "dining-table.usdz",
+      "thumbnail": "dining-table.png"
+    },
+    {
+      "id": "desk",
+      "name": "Study Desk",
+      "category": "tables",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 120,
+        "d": 60,
+        "h": 75
+      },
+      "dimsSource": "designed",
+      "wallHeight": null,
+      "summary": "An oak-top desk with a three-drawer pedestal and a modesty panel.",
+      "source": {
+        "name": "ARSpace procedural model",
+        "license": "CC0-1.0"
+      },
+      "model": "desk.usdz",
+      "thumbnail": "desk.png"
+    },
+    {
+      "id": "bookshelf",
+      "name": "Bookshelf",
+      "category": "storage",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 80,
+        "d": 30,
+        "h": 180
+      },
+      "dimsSource": "designed",
+      "wallHeight": null,
+      "summary": "A tall five-shelf oak bookcase, partly filled with books.",
+      "source": {
+        "name": "ARSpace procedural model",
+        "license": "CC0-1.0"
+      },
+      "model": "bookshelf.usdz",
+      "thumbnail": "bookshelf.png"
+    },
+    {
+      "id": "tv-unit",
+      "name": "TV Console",
+      "category": "storage",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 160,
+        "d": 40,
+        "h": 50
+      },
+      "dimsSource": "designed",
+      "wallHeight": null,
+      "summary": "A low walnut media console with two cabinet doors and an open centre shelf.",
+      "source": {
+        "name": "ARSpace procedural model",
+        "license": "CC0-1.0"
+      },
+      "model": "tv-unit.usdz",
+      "thumbnail": "tv-unit.png"
+    },
+    {
+      "id": "storage-cabinet",
+      "name": "Storage Cabinet",
+      "category": "storage",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 80,
+        "d": 48,
+        "h": 100
+      },
+      "dimsSource": "designed",
+      "wallHeight": null,
+      "summary": "A sage-green two-door cabinet with brass handles on a black plinth.",
+      "source": {
+        "name": "ARSpace procedural model",
+        "license": "CC0-1.0"
+      },
+      "model": "storage-cabinet.usdz",
+      "thumbnail": "storage-cabinet.png"
+    },
+    {
+      "id": "floor-lamp",
+      "name": "Floor Lamp",
+      "category": "lighting",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 40,
+        "d": 40,
+        "h": 160
+      },
+      "dimsSource": "designed",
+      "wallHeight": null,
+      "summary": "A brass floor lamp with a linen drum shade and a round black base.",
+      "source": {
+        "name": "ARSpace procedural model",
+        "license": "CC0-1.0"
+      },
+      "model": "floor-lamp.usdz",
+      "thumbnail": "floor-lamp.png"
+    },
+    {
+      "id": "barn-lamp",
+      "name": "Copper Barn Wall Light",
+      "category": "lighting",
+      "placement": "wall",
+      "floorStanding": false,
+      "footprint": {
+        "w": 19,
+        "d": 23,
+        "h": 26
+      },
+      "dimsSource": "model",
+      "wallHeight": 1.9,
+      "summary": "An industrial wall-mounted barn light with a brushed copper shade and exposed bulb.",
+      "source": {
+        "name": "Khronos glTF Sample Assets: AnisotropyBarnLamp",
+        "license": "CC-BY-4.0"
+      },
+      "model": "barn-lamp.usdz",
+      "thumbnail": "barn-lamp.png"
+    },
+    {
+      "id": "glass-lamp",
+      "name": "Table Lamp with Glass Base",
+      "category": "lighting",
+      "placement": "floor",
+      "floorStanding": false,
+      "footprint": {
+        "w": 30,
+        "d": 30,
+        "h": 48
+      },
+      "dimsSource": "model",
+      "wallHeight": null,
+      "summary": "A drum-shade table lamp on a clear glass globe base, with an iridescent lining inside the shade.",
+      "source": {
+        "name": "Khronos glTF Sample Assets: IridescenceLamp",
+        "license": "CC-BY-4.0"
+      },
+      "model": "glass-lamp.usdz",
+      "thumbnail": "glass-lamp.png"
+    },
+    {
+      "id": "arc-lamp",
+      "name": "Art Nouveau Arc Lamp",
+      "category": "lighting",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 113,
+        "d": 72,
+        "h": 186
+      },
+      "dimsSource": "model",
+      "wallHeight": null,
+      "summary": "A tall bronze arc lamp with a glass tulip shade; its bulb is modelled as a real light source.",
+      "source": {
+        "name": "Khronos glTF Sample Assets: LightsPunctualLamp",
+        "license": "CC-BY-4.0"
+      },
+      "model": "arc-lamp.usdz",
+      "thumbnail": "arc-lamp.png"
+    },
+    {
+      "id": "vase",
+      "name": "Glass Vases with Flowers",
+      "category": "decor",
+      "placement": "floor",
+      "floorStanding": false,
+      "footprint": {
+        "w": 22,
+        "d": 14,
+        "h": 20
+      },
+      "dimsSource": "model",
+      "wallHeight": null,
+      "summary": "A pair of clear glass vases holding small pink flowers, sized for a tabletop.",
+      "source": {
+        "name": "Khronos glTF Sample Assets: GlassVaseFlowers",
+        "license": "CC0-1.0"
+      },
+      "model": "vase.usdz",
+      "thumbnail": "vase.png"
+    },
+    {
+      "id": "plant",
+      "name": "Potted Plant",
+      "category": "decor",
+      "placement": "floor",
+      "floorStanding": true,
+      "footprint": {
+        "w": 70,
+        "d": 66,
+        "h": 84
+      },
+      "dimsSource": "model",
+      "wallHeight": null,
+      "summary": "A leafy indoor plant in a terracotta pot, with leaves that let light pass through.",
+      "source": {
+        "name": "Khronos glTF Sample Assets: DiffuseTransmissionPlant",
+        "license": "CC-BY-4.0"
+      },
+      "model": "plant.usdz",
+      "thumbnail": "plant.png"
+    },
+    {
+      "id": "candle-holder",
+      "name": "Glass Candle Holder",
+      "category": "decor",
+      "placement": "floor",
+      "floorStanding": false,
+      "footprint": {
+        "w": 15,
+        "d": 15,
+        "h": 30
+      },
+      "dimsSource": "model",
+      "wallHeight": null,
+      "summary": "A tall glass hurricane candle holder on a wooden base.",
+      "source": {
+        "name": "Khronos glTF Sample Assets: GlassHurricaneCandleHolder",
+        "license": "CC-BY-4.0"
+      },
+      "model": "candle-holder.usdz",
+      "thumbnail": "candle-holder.png"
+    },
+    {
+      "id": "wall-painting",
+      "name": "Framed Wall Painting",
+      "category": "decor",
+      "placement": "wall",
+      "floorStanding": false,
+      "footprint": {
+        "w": 70,
+        "d": 4,
+        "h": 50
+      },
+      "dimsSource": "designed",
+      "wallHeight": 1.5,
+      "summary": "An abstract painting in warm and deep-blue blocks, in a slim walnut frame.",
+      "source": {
+        "name": "ARSpace procedural model",
+        "license": "CC0-1.0"
+      },
+      "model": "wall-painting.usdz",
+      "thumbnail": "wall-painting.png"
+    },
+    {
+      "id": "wall-clock",
+      "name": "Wall Clock",
+      "category": "decor",
+      "placement": "wall",
+      "floorStanding": false,
+      "footprint": {
+        "w": 35,
+        "d": 5,
+        "h": 35
+      },
+      "dimsSource": "designed",
+      "wallHeight": 1.8,
+      "summary": "A 35 cm round clock with a black rim, white face and brass centre pin.",
+      "source": {
+        "name": "ARSpace procedural model",
+        "license": "CC0-1.0"
+      },
+      "model": "wall-clock.usdz",
+      "thumbnail": "wall-clock.png"
+    },
+    {
+      "id": "sculpture",
+      "name": "Abstract Sculpture",
+      "category": "decor",
+      "placement": "floor",
+      "floorStanding": false,
+      "footprint": {
+        "w": 30,
+        "d": 30,
+        "h": 55
+      },
+      "dimsSource": "designed",
+      "wallHeight": null,
+      "summary": "A polished brass knot sculpture on a stone plinth.",
+      "source": {
+        "name": "ARSpace procedural model",
+        "license": "CC0-1.0"
+      },
+      "model": "sculpture.usdz",
+      "thumbnail": "sculpture.png"
+    }
+  ]
+}

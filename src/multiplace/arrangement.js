@@ -18,7 +18,9 @@ export function toArrangement(objects, { recenter = true, planId = null, source 
   const placed = objects.filter((o) => o.state !== 'preview');
   const cx = recenter && placed.length ? placed.reduce((s, o) => s + o.position.x, 0) / placed.length : 0;
   const cz = recenter && placed.length ? placed.reduce((s, o) => s + o.position.z, 0) / placed.length : 0;
-  const floorY = placed.length ? Math.min(...placed.map((o) => o.position.y)) : 0;
+  // the floor height: the lowest floor-standing object (wall items keep their height above it)
+  const floorObjs = placed.filter((o) => o.surface !== 'wall');
+  const floorY = floorObjs.length ? Math.min(...floorObjs.map((o) => o.position.y)) : 0;
   const r = (v) => Math.round(v * 1000) / 1000;
   return {
     kind: 'arspace-arrangement',
@@ -35,6 +37,7 @@ export function toArrangement(objects, { recenter = true, planId = null, source 
       rotationY: r(o.rotationY),
       scale: r(o.scale),
       locked: o.state === 'locked',
+      surface: o.surface === 'wall' ? 'wall' : 'floor',
     })),
   };
 }
@@ -63,6 +66,7 @@ export function parseArrangement(data, knownProductIds) {
       rotationY: o.rotationY ?? 0,
       scale: Number.isFinite(o.scale) ? o.scale : 1,
       locked: Boolean(o.locked),
+      surface: o.surface === 'wall' ? 'wall' : 'floor',
     });
   });
   return { ok: true, objects, errors, relativeTo: data.relativeTo };

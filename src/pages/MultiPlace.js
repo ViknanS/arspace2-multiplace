@@ -73,13 +73,17 @@ export function renderMultiPlace(main, { signal }) {
                 <span class="mp-scale" data-scale>–</span>
                 <button type="button" class="btn btn--ghost btn--small" data-c="bigger" aria-label="Bigger">+</button>
                 <button type="button" class="btn btn--ghost btn--small" data-c="reset">True size</button>
+                <button type="button" class="btn btn--ghost btn--small" data-c="dup">Duplicate</button>
                 <button type="button" class="btn btn--ghost btn--small mp-danger" data-c="remove">${icon('x', 14)} Remove</button>
               </div>
             </div>
             <div class="sf-card">
               <h3 class="sf-card__title" data-count>Objects in room (0)</h3>
               <ul class="mp-list mp-list--page" data-list></ul>
-              <button type="button" class="btn btn--ghost btn--small mp-danger" data-clear>Clear entire room</button>
+              <div class="sf-sel__actions">
+                <button type="button" class="btn btn--ghost btn--small" data-undo>Undo</button>
+                <button type="button" class="btn btn--ghost btn--small mp-danger" data-clear>Clear entire room</button>
+              </div>
             </div>
             <div class="sf-card">
               <h3 class="sf-card__title">Arrangement</h3>
@@ -136,14 +140,17 @@ export function renderMultiPlace(main, { signal }) {
       const sel = mgr.selected();
       const st = sel?.state;
       $('[data-sel-title]').textContent = sel ? getProduct(sel.productId)?.name ?? sel.productId : 'Nothing selected';
+      const wall = sel?.surface === 'wall';
       $('[data-sel-hint]').textContent = sel
-        ? `${sel.instanceId} · ${st === 'locked' ? 'Locked: unlock it to move, rotate or resize.' : 'Drag it in the room to move it.'}`
+        ? `${sel.instanceId} · ${st === 'locked' ? 'Locked: unlock it to move, rotate or resize.' : wall ? 'Wall item: drag it to slide along the nearest wall.' : 'Drag it in the room to move it.'}`
         : 'Pick an object below to add it, or click one in the room.';
       const btn = (k) => $(`[data-c="${k}"]`);
       btn('lock').hidden = st !== 'placed';
       btn('unlock').hidden = st !== 'locked';
-      ['rotl', 'rotr', 'smaller', 'bigger', 'reset'].forEach((k) => (btn(k).disabled = !sel || st === 'locked'));
-      btn('remove').disabled = !sel;
+      ['smaller', 'bigger', 'reset'].forEach((k) => (btn(k).disabled = !sel || st === 'locked'));
+      ['rotl', 'rotr'].forEach((k) => (btn(k).disabled = !sel || st === 'locked' || wall));
+      btn('remove').disabled = btn('dup').disabled = !sel;
+      $('[data-undo]').disabled = !mgr.canUndo;
       $('[data-scale]').textContent = sel ? `${Math.round(sel.scale * 100)}%` : '–';
       $('[data-count]').textContent = `Objects in room (${mgr.count})`;
       $('[data-list]').innerHTML = objectRowsHTML(mgr).replace('Pick one from the bar below.', 'Pick one from the bar under the room.');
@@ -166,6 +173,7 @@ export function renderMultiPlace(main, { signal }) {
           smaller: () => mgr.setScale(id, s - 0.1),
           bigger: () => mgr.setScale(id, s + 0.1),
           reset: () => mgr.resetObject(id),
+          dup: () => mgr.duplicate(id, { offset: 0.6 * s + 0.2 }),
           remove: () => mgr.remove(id),
         })[b.dataset.c]?.();
       },
@@ -188,6 +196,7 @@ export function renderMultiPlace(main, { signal }) {
       },
       { signal },
     );
+    $('[data-undo]').addEventListener('click', () => mgr.undo(), { signal });
     $('[data-cam]').addEventListener('click', () => composer.resetCamera(), { signal });
 
     // keyboard shortcuts for the selected object
@@ -195,6 +204,11 @@ export function renderMultiPlace(main, { signal }) {
       'keydown',
       (e) => {
         if (e.target.closest('input, select, textarea')) return;
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+          mgr.undo();
+          e.preventDefault();
+          return;
+        }
         const id = mgr.selectedId;
         if (!id) return;
         if (e.key === 'Delete' || e.key === 'Backspace') mgr.remove(id);
@@ -241,7 +255,12 @@ export function renderMultiPlace(main, { signal }) {
       const ox = r.relativeTo === 'group-centre' ? composer.room.width / 2 : 0;
       const oz = r.relativeTo === 'group-centre' ? composer.room.length / 2 : 0;
       r.objects.forEach((o) =>
-        composer.add(o.productId, { position: { x: o.position.x + ox, y: 0, z: o.position.z + oz }, rotationY: o.rotationY, scale: o.scale, locked: o.locked }),
+        composer.add(o.productId, {
+          position: { x: o.position.x + ox, y: o.surface === 'wall' ? o.position.y : 0, z: o.position.z + oz },
+          rotationY: o.rotationY,
+          scale: o.scale,
+          locked: o.locked,
+        }),
       );
       toast(`Loaded ${r.objects.length} object${r.objects.length === 1 ? '' : 's'}${r.errors.length ? ` (${r.errors.length} skipped)` : ''}.`, 'success', 4000);
     }
@@ -315,12 +334,12 @@ export function renderMultiPlace(main, { signal }) {
       if (r.supported) {
         arModule = import('../ar/multiPlaceSession.js');
         arText.textContent =
-          'Opens one AR session. Pick items from the bar at the bottom of the camera view, place each one, and lock it. Locked objects stay where you put them while you add more.';
+          'Opens one AR session. Pick items from the bar at the bottom of the camera view, then Place & Lock each one. Locked objects stay where you put them while you add more. Wall items (lights, paintings, clocks) need a detected wall.';
         $('[data-ar-start]').hidden = false;
       } else {
         const ios = getPlatform() === 'ios';
         arText.textContent = ios
-          ? 'Multi-object camera AR needs WebXR, which Safari on iPhone and iPad does not provide, and AR Quick Look shows one model at a time. Use the 3D room composer below to arrange several objects, and open single items in AR Quick Look from their product pages.'
+          ? 'Multi-object camera AR in the browser needs WebXR, which Safari on iPhone and iPad does not provide, and AR Quick Look shows one model at a time. For several objects in one live camera session on iPhone, use the separate native ARSpace MultiPlace app (Swift, ARKit and RealityKit), installed from Xcode — it cannot run inside Safari. Here, the 3D room composer below arranges several objects.'
           : `${webxrUnavailableText(r.reason, 'Multi-object AR tools')} The 3D room composer below works here.`;
       }
     });

@@ -310,7 +310,11 @@ export function renderProduct(main, { id, params, signal }) {
   let fixModule = null;
   detectWebXRAR().then((r) => {
     if (signal.aborted) return;
-    if (r.supported) {
+    if (r.supported && p.placement === 'wall') {
+      // Fix Position places on the floor; a wall item must not be stood on the floor by mistake
+      fixText.innerHTML =
+        'This is a wall item. Fix Position places objects on the floor, so use <a class="link" href="#/multiplace">MultiPlace AR</a>, which hangs wall items on a detected wall, or View in my room.';
+    } else if (r.supported) {
       // preload so the click handler can request the session immediately
       fixModule = import('../ar/placementSession.js');
       fixText.textContent =
