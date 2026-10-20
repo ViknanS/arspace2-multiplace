@@ -44,7 +44,7 @@ async def main():
         # 3 overlap
         await pg.select_option('[data-scenario]','overlap'); await pg.wait_for_timeout(300)
         txt=await pg.locator('[data-results]').inner_text()
-        check('3 overlap measured', 'overlaps the Coffee table by 15 cm' in txt and await count_state(pg,'error')==2, txt.split('\n')[0])
+        check('3 overlap measured', 'overlaps the Coffee Table by 15 cm' in txt and await count_state(pg,'error')==2, txt.split('\n')[0])
         await pg.screenshot(path=f'{SH}/sf-overlap.png', full_page=True)
         # fix by dragging table down 20cm
         await drag_item(pg,'Coffee table',0,20); txt=await pg.locator('[data-results]').inner_text()

@@ -11,7 +11,7 @@ import subprocess, sys, os, re
 
 base = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:5173/'
 here = os.path.dirname(os.path.abspath(__file__))
-suites = [('Original ARSpace features', 'test.py'), ('SmartFit', 'sf.py'), ('Fix Position (mocked WebXR)', 'fix.py'), ('AutoGrid + plans + scan (mocked WebXR)', 'ag.py'), ('Routes, deep links, models', 'routes.py')]
+suites = [('Original ARSpace features', 'test.py'), ('SmartFit', 'sf.py'), ('Fix Position (mocked WebXR)', 'fix.py'), ('AutoGrid + plans + scan (mocked WebXR)', 'ag.py'), ('Routes, deep links, models', 'routes.py'), ('MultiPlace (composer + mocked WebXR)', 'mp.py')]
 failed = False
 for label, f in suites:
     out = subprocess.run([sys.executable, os.path.join(here, f), base], capture_output=True, text=True).stdout

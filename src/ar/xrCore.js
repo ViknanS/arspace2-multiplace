@@ -160,7 +160,7 @@ export async function startXRSession({ overlayRoot, onFrame, onSelect, onEnd }) 
     const stopSelect = (e) => e.preventDefault();
     overlayRoot?.addEventListener('beforexrselect', stopSelect);
 
-    const onSelectEvt = () => onSelect?.();
+    const onSelectEvt = (e) => onSelect?.(e);
     session.addEventListener('select', onSelectEvt);
 
     session.addEventListener(

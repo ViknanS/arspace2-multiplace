@@ -249,7 +249,7 @@ export function renderSmartFit(main, { params, signal }) {
     if (!p) return;
     $('[data-planinfo]').innerHTML = `${icon('ruler', 16)} <strong>${escapeHtml(p.name)}</strong> · ${(state.room.width / 100).toFixed(2)} × ${(
       state.room.length / 100
-    ).toFixed(2)} m · ${escapeHtml(sourceLabel(p.measurementSource))}${isUnsaved(p) ? ' · <em>unsaved</em>' : ''} · <a class="link" href="#/autogrid">Measure or edit in AutoGrid</a>`;
+    ).toFixed(2)} m · ${escapeHtml(sourceLabel(p.measurementSource))}${isUnsaved(p) ? ' · <em>unsaved</em>' : ''} · <a class="link" href="#/autogrid">Measure or edit in AutoGrid</a> · <a class="link" href="#/multiplace">Arrange in 3D</a>`;
   }
 
   /** First free spot (scanning a 10 cm grid), or the room centre if none. */

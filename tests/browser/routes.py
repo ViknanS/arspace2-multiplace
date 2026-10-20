@@ -9,7 +9,7 @@ async def main():
         b=await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader']); pg=await b.new_page(); errs=[]; bad=[]
         pg.on('pageerror', lambda e: errs.append(str(e)))
         pg.on('response', lambda r: bad.append(f'{r.status} {r.url}') if r.status>=400 else None)
-        routes={'':'See it in','#/collection':'The collection','#/product/sofa':'Curved Velvet Sofa','#/smartfit':'SmartFit','#/autogrid':'Design From Real Measurements.','#/upload':'Preview your own model','#/how-it-works':'See it in'}
+        routes={'':'See it in','#/collection':'The collection','#/product/sofa':'Curved Velvet Sofa','#/smartfit':'SmartFit','#/autogrid':'Design From Real Measurements.','#/multiplace':'MultiPlace','#/upload':'Preview your own model','#/how-it-works':'See it in'}
         for h,t in routes.items():
             await pg.goto(BASE+h); await pg.wait_for_timeout(600)
             txt=await pg.locator('h1').first.inner_text()
@@ -22,10 +22,10 @@ async def main():
         await pg.go_back(); await pg.wait_for_timeout(300); c=await pg.locator('h1').inner_text()
         await pg.go_forward(); await pg.wait_for_timeout(300); f=await pg.locator('h1').inner_text()
         check('browser back/forward', a.startswith('Design From') and c=='The collection' and f.startswith('Design From'))
-        for m in ['chair','sofa','barn-lamp','glass-lamp','vase','plant']:
+        for m in ['chair','sofa','barn-lamp','glass-lamp','vase','plant','coffee-table','floor-lamp','silk-pouf','arc-lamp','bookshelf','candle-holder']:
             await pg.goto(BASE+'#/product/'+m); await pg.wait_for_function("document.querySelector('model-viewer')?.loaded===true", timeout=120000)
             src=await pg.evaluate("document.querySelector('model-viewer').src")
-            check(f'model loads under /arspace/: {m}', '/arspace/models/' in src, src)
+            check(f'model loads from its base path: {m}', src.endswith(f'/models/{m}.glb') and (BASE.rstrip('/').split('/')[-1] in src or '/arspace' not in BASE), src)
         check('no 4xx/5xx responses', not bad, str(bad[:3]))
         check('no page errors', not errs, str(errs[:2]))
         await b.close()

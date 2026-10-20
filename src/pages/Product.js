@@ -103,7 +103,8 @@ export function renderProduct(main, { id, params, signal }) {
             <li>${icon('hand', 16)} Drag to rotate. Scroll or pinch to zoom. Right-drag or two-finger drag to pan.</li>
             <li>${icon('phone', 16)} Open AR on a supported mobile device.</li>
             <li>${icon('info', 16)} <button type="button" class="link-btn" data-guide>How to place an object in AR</button></li>
-            ${p.footprint ? `<li>${icon('ruler', 16)} <a class="link" href="#/smartfit?add=${p.id}">Check if it fits your room in SmartFit</a></li>` : ''}
+            ${p.floor ? `<li>${icon('ruler', 16)} <a class="link" href="#/smartfit?add=${p.id}">Check if it fits your room in SmartFit</a></li>` : ''}
+            <li>${icon('layers', 16)} <a class="link" href="#/multiplace">Arrange it with other pieces in MultiPlace</a></li>
           </ul>
         </div>
       </div>

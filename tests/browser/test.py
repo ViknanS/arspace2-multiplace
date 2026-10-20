@@ -23,12 +23,12 @@ async def desktop(b):
     await pg.screenshot(path=f'{SH}/dialog-unsupported.png'); await pg.keyboard.press('Escape')
     # collection
     await pg.click('text=Explore collection'); await pg.wait_for_timeout(500)
-    n=await pg.locator('.grid .card').count(); check('catalog shows 6 cards', n==6, str(n))
+    n=await pg.locator('.grid .card').count(); check('catalog shows all 19 cards', n==19, str(n))
     await pg.screenshot(path=f'{SH}/collection.png', full_page=True)
-    await pg.click('.segmented__btn[data-category=lighting]'); n=await pg.locator('.grid .card').count(); check('lighting filter -> 2', n==2, str(n))
+    await pg.click('.segmented__btn[data-category=lighting]'); n=await pg.locator('.grid .card').count(); check('lighting filter -> 4', n==4, str(n))
     await pg.fill('.search input','table'); n=await pg.locator('.grid .card').count(); check('filter + search combined -> 1', n==1, str(n))
     await pg.fill('.search input','xyz'); check('empty state shown', await pg.locator('.empty').count()==1)
-    await pg.click('[data-clear]'); n=await pg.locator('.grid .card').count(); check('clear restores all', n==6)
+    await pg.click('[data-clear]'); n=await pg.locator('.grid .card').count(); check('clear restores all', n==19)
     await pg.fill('.search input','sofa'); n=await pg.locator('.grid .card').count(); check('search sofa -> 1', n==1)
     # thumbnails loaded
     await pg.fill('.search input',''); await pg.wait_for_timeout(800)

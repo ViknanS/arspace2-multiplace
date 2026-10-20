@@ -1,15 +1,15 @@
 # ARSpace
 
-**Live Website: https://viknans.github.io/arspace/**
+**Live Website: https://viknans.github.io/arspace2/**
 
-### [▶ Launch ARSpace](https://viknans.github.io/arspace/)
+### [▶ Launch ARSpace](https://viknans.github.io/arspace2/)
 
 Clicking **Launch ARSpace** opens the actual deployed application, hosted on GitHub Pages over HTTPS. Open it on an AR-capable phone to place furniture in your room. This repository page shows the source code; the link above is the running app.
 
 | | |
 |---|---|
-| Live app | https://viknans.github.io/arspace/ |
-| Source code | https://github.com/ViknanS/arspace |
+| Live app | https://viknans.github.io/arspace2/ |
+| Source code | https://github.com/ViknanS/arspace2 |
 | Deployment | GitHub Actions → GitHub Pages (`.github/workflows/deploy.yml`), on every push to `main` |
 
 **An Interactive Augmented Reality Room and Object Visualization Application**
@@ -21,9 +21,12 @@ It also includes **SmartFit**, an intelligent furniture fit and walkability anal
 Two further modules complete the pipeline:
 
 - **Fix Position** — a custom WebXR AR mode (on browsers that support it) where you place furniture on your floor, lock it to that tracked spot, walk around it, unlock it to move it, or reset.
+- **MultiPlace** — several furniture objects in one AR session, each placed, locked, unlocked, moved, rotated, resized or removed on its own, chosen from a swipeable picker; plus a camera-free 3D room composer for iPhone and desktop.
 - **AutoGrid** — measure the room by capturing its four floor corners in AR (Android WebXR) or by typing the dimensions (any device), generate a proportional floor grid, and open the result in SmartFit. Plans can be saved, loaded, renamed, deleted, exported and imported.
 
-**Room Measurement → Floor Grid → Furniture Arrangement → Collision Detection → Walkability Analysis → AR Preview → World-Locked Placement.**
+**Room Measurement → Floor Grid → Furniture Arrangement → Collision Detection → Walkability Analysis → AR Preview → World-Locked Placement → Multi-Object Room Composition.**
+
+The catalog has **19 real 3D models** across Seating, Tables, Storage, Lighting and Decor (9 from the Khronos glTF sample library, 10 procedural models built for this project).
 
 It is a static site: no backend, no database, no paid service.
 
@@ -73,6 +76,10 @@ Shoppers and homeowners struggle to picture how furniture and decor will look in
 | AutoGrid grid | 25 / 50 / 100 cm spacing (default 50), partial edge cells hatched and described, show/hide, zoom in/out, pan when zoomed, reset view, edit dimensions, regenerate. Drawn in real centimetres, so a 5 × 3 m room is visibly wider than a 3 × 3 m one. |
 | Shared room plan | One plan (schema v1, metres) is the source of truth for AutoGrid and SmartFit, kept in memory and mirrored to localStorage. Edits on either page show on the other. SmartFit uses the plan's grid spacing, can snap furniture edges to it, and keeps its 5 cm walkway grid independently. |
 | Room plans | Save, Load, Rename, Delete, New plan, Export JSON, Import JSON. Validation on every read, confirmation before overwriting a different plan with the same name or discarding unsaved changes, corrupted data kept as a backup instead of erased, storage-full and blocked-storage messages. |
+| **MultiPlace AR** (custom WebXR) | One immersive-ar session, one three.js scene, many objects. Horizontal, swipeable object picker with thumbnails and category chips at the bottom of the camera view. Pick an item → it previews on the reticle → **Place** → **Lock Position**. Pick more items without leaving AR; locked items stay put. Tap an object (raycast) or use the **Objects (n)** panel to select it, then **Unlock**, **Move**, rotate ±15°, resize 50–150 % (100 % = true size), **True size**, **Remove**. **Clear entire room** needs a second tap. Each locked object gets its own WebXR anchor when the runtime grants anchors. |
+| MultiPlace object model | Every instance has a unique ID (`chair-001`, `chair-002`…), its own position, rotation, scale and lock state. Only one object (a new preview or one being moved) ever follows the reticle. Switching products discards only an unplaced preview. A model that fails to load is removed without touching the rest. Models are cached and cloned per instance. |
+| **3D room composer** | The same multi-object workflow without the camera, labelled as not AR: room sized from the shared plan, add from the picker, click to select, drag to move, lock/unlock, rotate, resize, remove, clear. Export/import arrangement JSON, send floor furniture to the SmartFit plan, load the plan's furniture back. Used on iPhone (Safari has no WebXR AR) and desktop. |
+| Catalog | 19 products with ID, name, category, model, thumbnail, width/depth/height, description, source and licence. The same data feeds the viewer, AR, SmartFit (14 floor-standing items) and MultiPlace. |
 | Error handling | Missing/corrupt model, slow network (message after 25 s), offline/online notices, GPU context loss, AR session failure or denied camera, unknown routes, rapid switching between objects. |
 | Accessibility | Keyboard focus rings, skip link, ARIA states on toggles, `prefers-reduced-motion` respected (no auto-rotate, no animations). |
 
@@ -132,6 +139,7 @@ arspace/
 │   │   └── PlanManager.js    save/load/rename/delete/new/export/import UI
 │   ├── pages/
 │   │   ├── Home.js  Product.js  Upload.js
+│   │   ├── MultiPlace.js     MultiPlace page: AR launcher + 3D composer
 │   │   ├── SmartFit.js       room planner UI (SVG plan, panels, dashboard)
 │   │   └── AutoGrid.js       room measurement, grid preview, scan results
 │   ├── ar/
@@ -139,7 +147,14 @@ arspace/
 │   │   ├── xrCore.js         one shared WebXR session: renderer, hit test, reticle, cleanup
 │   │   ├── placementState.js Fix Position state machine (pure, unit tested)
 │   │   ├── placementSession.js  Fix Position UI, anchors / session-local locking
-│   │   └── measureSession.js AutoGrid corner capture in AR
+│   │   ├── measureSession.js AutoGrid corner capture in AR
+│   │   └── multiPlaceSession.js MultiPlace AR: one session, many objects, per-object anchors
+│   ├── multiplace/
+│   │   ├── objectManager.js  PlacedObjectManager: instances, IDs, lock/unlock/move/remove (pure, tested)
+│   │   ├── modelAssets.js    ModelAssetManager: cached loading + safe cloning
+│   │   ├── ui.js             swipeable object picker + objects panel (shared by AR and composer)
+│   │   ├── composer.js       camera-free 3D room composer (three.js + OrbitControls)
+│   │   └── arrangement.js    arrangement export/import (pure, tested)
 │   ├── autogrid/
 │   │   ├── roomGeometry.js   projection, distances, shoelace area, validation
 │   │   ├── gridGenerator.js  grid cells, partial edges, snapping
@@ -157,6 +172,8 @@ arspace/
 │   ├── *.test.js             unit tests (npm test): geometry, placement, measurement, grid, storage, integration
 │   └── browser/              Playwright suites (npm run test:browser) + xrmock.js WebXR stand-in
 ├── DEVICE_TESTING.md         Android / iPhone / desktop hands-on checklist
+├── tools/                    procedural furniture generator (three.js → GLB)
+├── .github/workflows/deploy.yml  GitHub Pages deployment
 ├── README.md
 ├── ATTRIBUTIONS.md
 └── PRESENTATION.md           abstract, demo script, viva questions
@@ -218,6 +235,27 @@ After Fix, new reticle positions are ignored; nothing is camera-relative. Unlock
 
 **Model handling.** The GLB is loaded with three.js `GLTFLoader` while you scan. Its bounding box puts the base at y = 0 and centres it, so it stands on the floor point. A soft contact shadow is added. Material variants chosen on the product page are not carried into this mode.
 
+## MultiPlace: multi-object AR
+
+**Why it's different from launching AR several times.** Scene Viewer and AR Quick Look show one model per launch. MultiPlace keeps **one** WebXR session and **one** three.js scene and adds objects to it, so earlier furniture is still there when you add the next piece.
+
+| Role | Module |
+|---|---|
+| ModelAssetManager | `multiplace/modelAssets.js` — loads each GLB once (cache), clones per instance with `SkeletonUtils.clone`, floor-centres the pivot, per-instance selection ring and contact shadow, disposal |
+| PlacedObjectManager | `multiplace/objectManager.js` — a `Map` of instances with unique IDs and per-object `position`, `rotationY`, `scale`, `state` (`preview` / `placed` / `moving` / `locked`); pure and unit tested |
+| ARPlacementManager | `ar/multiPlaceSession.js` on top of `ar/xrCore.js` — session, hit test, reticle, follower updates, per-object anchors, tracking state, raycast selection |
+| ARObjectPicker + ARSceneUI | `multiplace/ui.js` and the overlay in `multiPlaceSession.js` — picker, category chips, selected-object controls, objects panel, status |
+
+**Per-object locking.** Lock sets that instance's state to `locked`. If anchors are granted, ARSpace calls `frame.createAnchor(XRRigidTransform, referenceSpace)` at the object's pose on the next frame and stores the anchor under that instance ID; each frame, `frame.getPose(anchor.anchorSpace, refSpace)` updates only that object. Otherwise the object keeps its transform in the tracked reference space. Unlock, Move, Remove and Clear delete only the affected anchors. Locked objects refuse rotate, resize and move until unlocked.
+
+**Selection.** A screen tap that isn't on a button arrives as a WebXR `select` event. Its target ray (`event.frame.getPose(inputSource.targetRaySpace, refSpace)`) is raycast against the placed objects; the nearest hit is selected. If nothing is hit, the tap places the object that is following the reticle.
+
+**Without DOM Overlay** the picker can't be shown inside AR, so taps cycle: place → lock → add another of the product chosen before starting.
+
+**Arrangements.** When a session ends, the placed objects are kept as an arrangement (product IDs, instance IDs, positions relative to the group centre, rotations, scales, lock flags) that can be exported as JSON or opened in the 3D composer. Reopening AR does not restore objects to the same physical spots; that would need relocalisation, which isn't implemented.
+
+**iPhone.** Safari doesn't provide WebXR AR, and AR Quick Look displays one model per launch with no way for a web page to add more. iPhone therefore gets the 3D room composer (clearly labelled as not camera AR) plus the existing single-object Quick Look.
+
 ## AutoGrid: measurement and grid
 
 **Capture.** Each Capture Corner stores the hit-test position (x, y, z) in the tracked reference space. Markers and edges are drawn at those world positions so they stay on the floor while you move.
@@ -267,7 +305,7 @@ Open **http://localhost:5173** in Safari or Chrome. The terminal also prints a `
 ### 5. Run the tests
 
 ```bash
-npm test                 # 60 unit tests, no browser needed
+npm test                 # 73 unit tests, no browser needed
 ```
 
 Optional browser suites (need Python 3 and Playwright, and `npm run dev` running in another terminal):
@@ -333,13 +371,13 @@ Testing over `http://<your-Mac-IP>:5173` from a phone is not reliable for AR: We
 
 ## Device and browser compatibility
 
-| Device / browser | 3D viewer | View in my room | Fix Position | AutoGrid scan | AutoGrid manual + SmartFit |
-|---|---|---|---|---|---|
-| macOS / Windows / Linux browsers | Yes | No — explained, QR code to phone | No — explained | No — explained | Yes |
-| Android Chrome, ARCore device, https | Yes | WebXR or Scene Viewer | Yes, if `immersive-ar` is reported | Yes, if `immersive-ar` + hit test | Yes |
-| Android, other browsers | Yes | Scene Viewer if supported | Only if the browser reports WebXR AR | Same | Yes |
-| iPhone / iPad Safari | Yes | AR Quick Look | No (Safari has no WebXR AR) — explained | No — explained, enter measurements | Yes |
-| Any page over plain http (not localhost) | Yes | Limited | No (WebXR needs https) | No | Yes |
+| Device / browser | 3D viewer | View in my room | Fix Position | MultiPlace AR | 3D composer | AutoGrid scan | AutoGrid manual + SmartFit |
+|---|---|---|---|---|---|---|---|
+| macOS / Windows / Linux browsers | Yes | No — explained, QR code to phone | No — explained | No — explained | Yes | No — explained | Yes |
+| Android Chrome, ARCore device, https | Yes | WebXR or Scene Viewer | Yes, if `immersive-ar` is reported | Yes, if `immersive-ar` is reported | Yes | Yes, if `immersive-ar` + hit test | Yes |
+| Android, other browsers | Yes | Scene Viewer if supported | Only with WebXR AR | Only with WebXR AR | Yes | Same | Yes |
+| iPhone / iPad Safari | Yes | AR Quick Look (one model per launch) | No — explained | No — explained | Yes | No — explained | Yes |
+| Any page over plain http (not localhost) | Yes | Limited | No (WebXR needs https) | No | Yes | No | Yes |
 
 ## Testing performed
 
@@ -348,13 +386,14 @@ Run in this environment on the final code. "Mocked WebXR" means the suites repla
 | Command / suite | Result |
 |---|---|
 | `npm install`, `npm run build`, `npm run dev`, `npm run preview` | Passed |
-| `npm test` — 60 unit tests: SmartFit geometry (13), Fix Position state machine (11), measurement geometry (13), grid generation (7), plan storage (11), AutoGrid→SmartFit integration (5) | **60 / 60 passed** |
+| `npm test` — 73 unit tests: SmartFit geometry (13), Fix Position state machine (11), measurement geometry (13), grid generation (7), plan storage (11), AutoGrid→SmartFit integration (5), MultiPlace object manager + arrangement + catalog (13, incl. the 16-step lamp/chair/table scenario, unique IDs, every GLB present and valid, no duplicate model files) | **73 / 73 passed** |
 | Browser: original ARSpace features (home, catalog, filters, search, 6 models, viewer controls, reset, variants, AR attributes, desktop AR dialog, Android Scene Viewer intent, errors, quick switching, upload) | 41 / 42 (touch-rotation item below) |
 | Browser: SmartFit (all previous checks + emulated touch drag of furniture + page scroll from empty floor) | **34 / 34 passed** |
 | Browser: Fix Position, mocked WebXR (button gating, session features requested, scanning/surface messages, place disabled without surface, preview follows reticle, Fix creates anchor, object ignores later reticle and camera movement, follows anchor updates, tracking loss and recovery, rotate, Unlock releases anchor, re-fix, Reset, Exit cleanup, second session, system-ended session, no-anchor session-local mode, tap fallback without DOM Overlay, permission denied, hit test unsupported, desktop and iPhone explanations) | **30 / 30 passed** |
 | Browser: AutoGrid + plans + scan, mocked WebXR (grid counts for 25/50/100 cm, partial cells, proportional drawing, invalid input, zoom/pan/reset, grid toggle, hand-off to SmartFit, furniture/rotation/snap on generated plan, SmartFit edits sync back, save/new/load/rename/delete, export/import, broken import, reload persistence, corrupted storage recovery, corner capture with duplicate rejection, live readout, undo, reset, exit, rectangular/irregular/invalid scans, AR result to SmartFit, iPhone manual flow, mobile overflow) | **52 / 52 passed** |
+| Browser: MultiPlace (desktop composer: picker scroll and filters, three locked objects, unlock/drag only one, locked drag refused, remove, unique second lamp, scale clamp, export/import, send to and load from SmartFit, failed model isolation, clear; mocked WebXR: one session, Surface Found / Ready to Place / Object Placed — Lock Position messages, per-object anchors, adding items without restarting, camera and reticle movement don't move locked items, anchor correction moves one item, objects panel, unlock/move/re-lock one item, raycast tap selection, remove, second instance ID, preview discard on switch, tap-to-place, failed model, two-tap clear, exit cleanup, arrangement to composer, no-DOM-overlay fallback; iPhone explanation + composer) | **58 / 58 passed** |
 | Touch rotation of the 3D viewer | **Flaky in emulation** — headless Chrome cancels synthetic touches on model-viewer; check on a real phone. Furniture touch-drag in SmartFit is now verified in emulation. |
-| **Real-device AR (View in my room, Fix Position, AutoGrid scan) on Android** | **Pending — requires a compatible phone.** See DEVICE_TESTING.md. |
+| **Real-device AR (View in my room, Fix Position, MultiPlace, AutoGrid scan) on Android** | **Pending — requires a compatible phone.** See DEVICE_TESTING.md. |
 | **iPhone AR Quick Look and touch interaction** | **Pending — requires a real iPhone/iPad.** |
 | Measurement accuracy against a tape measure | **Pending — physical test.** |
 
@@ -378,6 +417,15 @@ Run in this environment on the final code. "Mocked WebXR" means the suites repla
 - The plan and an AR session share no coordinate frame, so furniture is not automatically placed at its planned floor position in AR.
 - Saved plans live in this browser's localStorage. Use Export/Import to move them between devices; there is no cloud sync.
 
+### MultiPlace limitations
+
+- Multi-object camera AR needs WebXR AR (Chrome on ARCore Android over https). iPhone gets the 3D composer and single-object Quick Look.
+- Objects are placed on detected horizontal surfaces. There's no occlusion, so real furniture doesn't hide virtual objects, and virtual objects don't collide with each other in AR (SmartFit does the collision maths on the plan).
+- Anchors last for one session. Arrangements can be exported, but reopening AR does not restore objects to the same physical spots.
+- About 5–10 objects is the target on a capable phone. Large textured models (e.g. the 7.8 MB barn light) cost more memory; ARSpace warns from 10 objects.
+- Sending composer furniture to SmartFit rounds rotations to 0° or 90° and skips tabletop and wall items.
+- The procedural models are simple low-poly pieces with designed (not real product) dimensions.
+
 ### SmartFit limitations
 
 - SmartFit works only on the room size and positions you enter. It does not scan your room, detect walls or read furniture positions from the camera.
@@ -390,7 +438,7 @@ Run in this environment on the final code. "Mocked WebXR" means the suites repla
 
 ## Future enhancements (not implemented)
 
-AI image-to-3D conversion · image upload with object reconstruction · full room scanning (LiDAR / Apple RoomPlan in a native app) · wall and L-shaped room capture · registering the SmartFit plan to the AR session so planned positions appear on the real floor · persistent cross-session anchors · object occlusion behind real furniture · multiple objects in one AR scene · interior design recommendations · AI room layout generation · cloud-synced room designs · collaborative AR editing · VR interior walkthroughs.
+AI image-to-3D conversion · image upload with object reconstruction · full room scanning (LiDAR / Apple RoomPlan in a native app) · wall and L-shaped room capture · registering the SmartFit plan to the AR session so planned positions appear on the real floor · persistent cross-session anchors · object occlusion behind real furniture · interior design recommendations · AI room layout generation · cloud-synced room designs · occlusion and per-object physics in AR · relocalising saved arrangements in a new AR session · collaborative AR editing · VR interior walkthroughs.
 
 ## Model attributions
 

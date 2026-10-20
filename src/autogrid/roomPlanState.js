@@ -108,7 +108,7 @@ export function validatePlan(raw) {
       rotationDeg: f.rotationDeg === 90 ? 90 : 0,
       xMeters: clamp(f.xMeters, 0, w),
       yMeters: clamp(f.yMeters, 0, l),
-      source: ['model', 'demo', 'edited'].includes(f.source) ? f.source : 'edited',
+      source: ['model', 'designed', 'demo', 'edited'].includes(f.source) ? f.source : 'edited',
       productId: typeof f.productId === 'string' ? f.productId : undefined,
     });
   });

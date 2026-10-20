@@ -1,34 +1,27 @@
 import { PRODUCTS } from '../data/products.js';
 
 /**
- * Furniture available in SmartFit.
- *
- * - Catalog items: footprints measured from each 3D model's bounding box.
- *   These are the model's dimensions, not verified manufacturer specs.
- * - Planning blocks: simple rectangles with demonstration dimensions so a
- *   realistic room can be laid out. They have no 3D model, so no AR preview.
- * Every dimension can be edited once the item is on the plan.
+ * Furniture available in SmartFit: every product that stands on the floor,
+ * taken from the shared catalog (src/data/products.js) so there is one source
+ * of truth. Footprints are either measured from the 3D model's bounding box
+ * ('model') or the designed size of an ARSpace procedural model ('designed').
+ * Neither is verified manufacturer data, and every size can be edited on the plan.
  */
-export const FIT_ITEMS = [
-  ...PRODUCTS.filter((p) => p.footprint).map((p) => ({
-    kind: p.id,
-    name: p.name,
-    w: p.footprint.w,
-    d: p.footprint.d,
-    h: p.footprint.h,
-    source: 'model',
-    productId: p.id,
-    thumb: p.thumb,
-  })),
-  { kind: 'coffee-table', name: 'Coffee table', w: 100, d: 55, h: 45, source: 'demo' },
-  { kind: 'side-table', name: 'Side table', w: 45, d: 45, h: 55, source: 'demo' },
-  { kind: 'bookshelf', name: 'Bookshelf', w: 80, d: 30, h: 180, source: 'demo' },
-  { kind: 'tv-unit', name: 'TV unit', w: 160, d: 40, h: 50, source: 'demo' },
-  { kind: 'desk', name: 'Desk', w: 120, d: 60, h: 75, source: 'demo' },
-];
+export const FIT_ITEMS = PRODUCTS.filter((p) => p.floor && p.footprint).map((p) => ({
+  kind: p.id,
+  name: p.name,
+  w: p.footprint.w,
+  d: p.footprint.d,
+  h: p.footprint.h,
+  source: p.dimsSource === 'designed' ? 'designed' : 'model',
+  productId: p.id,
+  thumb: p.thumb,
+  category: p.category,
+}));
 
 export const SOURCE_LABEL = {
   model: 'Measured from 3D model',
+  designed: 'Designed size of 3D model',
   demo: 'Demo size, edit to match',
   edited: 'Size edited by you',
 };

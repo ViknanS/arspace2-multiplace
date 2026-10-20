@@ -5,8 +5,8 @@ const LINKS = [
   { href: '#/collection', label: 'Collection', match: (r) => r === 'collection' || r === 'product' },
   { href: '#/autogrid', label: 'AutoGrid', match: (r) => r === 'autogrid' },
   { href: '#/smartfit', label: 'SmartFit', match: (r) => r === 'smartfit' },
+  { href: '#/multiplace', label: 'MultiPlace', match: (r) => r === 'multiplace' },
   { href: '#/upload', label: 'Your model', match: (r) => r === 'upload' },
-  { href: '#/how-it-works', label: 'How AR works', match: () => false },
 ];
 
 export function renderNavbar(root) {

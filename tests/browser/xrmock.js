@@ -14,6 +14,19 @@
     getViewport() { return { x: 0, y: 0, width: this.framebufferWidth, height: this.framebufferHeight }; }
   }
   window.XRWebGLLayer = XRWebGLLayerMock;
+  window.XRRigidTransform = class { constructor(p = {}, o = {}) { this.position = { x: p.x || 0, y: p.y || 0, z: p.z || 0, w: 1 }; this.orientation = { x: o.x || 0, y: o.y || 0, z: o.z || 0, w: o.w ?? 1 }; } };
+  const norm = (v) => { const l = Math.hypot(v.x, v.y, v.z) || 1; return { x: v.x / l, y: v.y / l, z: v.z / l }; };
+  const crossV = (a, b) => ({ x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x });
+  // column-major matrix whose -Z axis points from `from` to `to`
+  function lookMatrix(from, to) {
+    const f = norm({ x: to.x - from.x, y: to.y - from.y, z: to.z - from.z });
+    const z = { x: -f.x, y: -f.y, z: -f.z };
+    let x = crossV({ x: 0, y: 1, z: 0 }, z);
+    if (Math.hypot(x.x, x.y, x.z) < 1e-6) x = { x: 1, y: 0, z: 0 };
+    x = norm(x);
+    const y = crossV(z, x);
+    return new Float32Array([x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, from.x, from.y, from.z, 1]);
+  }
   window.XRFrame = class {};
   if (!cfg.noAnchors) window.XRFrame.prototype.createAnchor = function () {};
   class Session extends EventTarget {
@@ -27,7 +40,7 @@
     updateRenderState(s) { Object.assign(this.renderState, s); }
     async requestReferenceSpace(type) { return { type, getOffsetReferenceSpace() { return this; }, addEventListener() {}, removeEventListener() {} }; }
     async requestHitTestSource() { return { cancel() { X.cancelled++; } }; }
-    requestAnimationFrame(cb) { const id = ++this._id; setTimeout(() => { if (!this.ended) cb(performance.now(), this._frame()); }, 16); return id; }
+    requestAnimationFrame(cb) { const id = ++this._id; setTimeout(() => { if (!this.ended) cb(performance.now(), this._frame()); }, cfg.frameMs || 16); return id; }
     cancelAnimationFrame() {}
     _frame() {
       const s = this;
@@ -48,8 +61,23 @@
           };
           return [r];
         },
-        getPose(space) { if (space && space.__anchor) { const p = space.__anchor.pos; return { transform: new RigidT(p.x, p.y, p.z) }; } return null; },
+        getPose(space) {
+          if (space && space.__anchor) { const p = space.__anchor.pos; return { transform: new RigidT(p.x, p.y, p.z) }; }
+          if (space && space.__ray) return { transform: { matrix: lookMatrix(space.__ray.from, space.__ray.to), position: { ...space.__ray.from, w: 1 } } };
+          return null;
+        },
+        createAnchor: cfg.noAnchors ? undefined : (t) => {
+          const a = { pos: { x: t.position.x, y: t.position.y, z: t.position.z }, deleted: false, anchorSpace: {}, delete() { if (!this.deleted) { this.deleted = true; X.deleted++; } } };
+          a.anchorSpace.__anchor = a; X.anchors.push(a); return Promise.resolve(a);
+        },
       };
+    }
+    /** Simulate a screen tap whose ray goes from the camera towards `to` (or no target). */
+    tap(to) {
+      const e = new Event('select');
+      e.frame = this._frame();
+      e.inputSource = { targetRaySpace: { __ray: { from: { ...X.cam }, to: to || { x: X.cam.x, y: X.cam.y, z: X.cam.z - 1 } } } };
+      this.dispatchEvent(e);
     }
     async end() { if (this.ended) return; this.ended = true; X.ended++; this.dispatchEvent(new Event('end')); }
   }

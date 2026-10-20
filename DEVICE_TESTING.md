@@ -39,6 +39,26 @@ Before you start: deploy the site (Netlify or Vercel) and use the **https** link
 | 29 | Save plan, reload page, load plan | Plan restored | |
 | 30 | Export plan; import it on another device | Same plan opens | |
 
+## Android — MultiPlace (Chrome on an ARCore phone)
+
+| # | Step | Expected | Result |
+|---|---|---|---|
+| M1 | MultiPlace → Start with Floor Lamp → **Start MultiPlace AR** | Camera opens with the object picker at the bottom | |
+| M2 | Scan the floor | "Surface Found. Ready to Place." | |
+| M3 | **Place**, then **Lock Position** | "Object Placed — Lock Position." then locked; label says which lock method is used | |
+| M4 | Swipe the picker, pick **Modern Accent Chair** | Lamp stays where it was; chair previews on the reticle | |
+| M5 | Place and lock the chair beside the lamp | Both stay put | |
+| M6 | Pick **Coffee Table**, place and lock it | Three objects; "Objects (3)" | |
+| M7 | Walk around all three | All stay in their positions; perspective changes naturally | |
+| M8 | Tap the chair | Chair is selected (blue ring) | |
+| M9 | **Unlock** → **Move** → place elsewhere → **Lock Position** | Only the chair moves | |
+| M10 | Objects panel → remove the table | Lamp and chair remain | |
+| M11 | Pick Floor Lamp again | New instance `floor-lamp-002` | |
+| M12 | Rotate / resize an unlocked object | Only that object changes | |
+| M13 | Clear entire room (tap twice) | All objects removed | |
+| M14 | Exit AR | Result card shows the session's objects; opens in the 3D composer | |
+| M15 | Performance with 5–10 objects | Note phone model and whether it stays smooth | |
+
 ## iPhone / iPad (Safari)
 
 | # | Step | Expected | Result |
@@ -54,6 +74,8 @@ Before you start: deploy the site (Netlify or Vercel) and use the **https** link
 | 9 | Touch-drag furniture | Moves; page scrolls from empty floor | |
 | 10 | Collisions and walking route | Update as on desktop | |
 | 11 | Save / reload / load plan | Restored | |
+| 12 | MultiPlace page | Explains no multi-object camera AR on Safari; 3D composer works | |
+| 13 | Composer: add chair, lamp, table; drag, lock, unlock one | Only the selected piece changes | |
 
 ## Desktop (MacBook)
 

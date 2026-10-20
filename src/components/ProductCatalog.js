@@ -16,7 +16,7 @@ export function renderCatalogPage(main, { params, signal }) {
   main.innerHTML = `
     <section class="page-head container">
       <h1>The collection</h1>
-      <p class="lede">Six real 3D models. Open any of them to rotate, resize and recolour it, then place it in your room on an AR-capable phone.</p>
+      <p class="lede">${PRODUCTS.length} real 3D models. Open any of them to rotate and resize it, then place it in your room on an AR-capable phone, or combine several in MultiPlace.</p>
     </section>
     <section class="container catalog" aria-label="Catalog">
       <div class="catalog__toolbar">

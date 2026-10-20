@@ -8,6 +8,7 @@ import { renderProduct } from './pages/Product.js';
 import { renderUpload } from './pages/Upload.js';
 import { renderSmartFit } from './pages/SmartFit.js';
 import { renderAutoGrid } from './pages/AutoGrid.js';
+import { renderMultiPlace } from './pages/MultiPlace.js';
 import { icon } from './utils/icons.js';
 import { toast } from './utils/dom.js';
 
@@ -36,6 +37,7 @@ let pageController = null;
  *   #/product/:id       product details + 3D viewer + AR
  *   #/autogrid          AutoGrid room measurement + floor grid
  *   #/smartfit          SmartFit room planner (fit + walkway analysis)
+ *   #/multiplace        MultiPlace multi-object AR + 3D room composer
  *   #/upload            local .glb preview
  */
 function parseRoute() {
@@ -50,6 +52,7 @@ function parseRoute() {
   if (parts[0] === 'upload') return { name: 'upload', params };
   if (parts[0] === 'smartfit') return { name: 'smartfit', params };
   if (parts[0] === 'autogrid') return { name: 'autogrid', params };
+  if (parts[0] === 'multiplace') return { name: 'multiplace', params };
   return { name: 'notfound', params };
 }
 
@@ -86,6 +89,10 @@ function render() {
       case 'autogrid':
         renderAutoGrid(main, { signal });
         document.title = 'AutoGrid — ARSpace';
+        break;
+      case 'multiplace':
+        renderMultiPlace(main, { signal });
+        document.title = 'MultiPlace — ARSpace';
         break;
       case 'smartfit':
         renderSmartFit(main, { params: route.params, signal });

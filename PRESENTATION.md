@@ -249,3 +249,68 @@ The logic was tested with a scripted WebXR stand-in in a real browser (hit resul
 
 **30. What would you do next?**
 Register the plan to the AR session so planned furniture appears in place, support L-shaped rooms, persistent anchors across sessions, and a native RoomPlan/LiDAR scanner on iPhone.
+
+
+---
+
+# Phase 5: MultiPlace — Multi-Object AR with Independent Spatial Locking
+
+*"Place More. Lock Independently. Design Your Space."*
+
+## What it adds
+
+A basic AR visualizer shows one product per AR launch. MultiPlace keeps one WebXR session and one 3D scene, so you can place a lamp, lock it, add a chair beside it, lock that, add a coffee table, and walk around all three. Any single piece can be unlocked, moved, rotated, resized or removed without disturbing the others. Several instances of the same product are allowed (chair-001, chair-002). A swipeable picker at the bottom of the camera view lists the catalog, which now has 19 real 3D models.
+
+## Technical contribution
+
+The contribution is an **integrated multi-object scene-management and independent-placement workflow**, not spatial anchoring itself:
+
+- a PlacedObjectManager that gives every instance its own ID, transform and lock state, with rules that guarantee only one object follows the reticle and that locking, moving or removing one never affects another (unit tested, including a 16-step lamp/chair/table scenario);
+- a ModelAssetManager that loads each model once and clones it safely per instance;
+- per-object WebXR anchors (created with `frame.createAnchor` at each object's pose) with a session-space fallback;
+- raycast selection of placed objects from the WebXR select event's target ray;
+- one shared object model for camera AR (Android) and a camera-free 3D composer (iPhone and desktop), connected to the SmartFit plan.
+
+Anchors, hit testing and the AR runtime come from WebXR / ARCore.
+
+## Demonstration script (about 2 minutes)
+
+1. **Set up (10 s).** "Most AR furniture apps show one item at a time. MultiPlace lets me furnish a whole corner in one AR session."
+2. **Start (10 s).** Android → MultiPlace → Start with Floor Lamp → Start MultiPlace AR.
+3. **First object (15 s).** Scan the floor ("Surface Found. Ready to Place.") → Place → "Object Placed — Lock Position." → Lock Position.
+4. **More objects without leaving AR (30 s).** Swipe the picker, tap the Modern Accent Chair, place it beside the lamp, lock. Swipe to Tables, tap Coffee Table, place in front, lock. "Objects (3)."
+5. **Walk around (15 s).** "Each piece stays where I put it; the lamp didn't jump when I picked the chair."
+6. **Edit one piece (25 s).** Tap the chair to select it → Unlock → Move → place it further away → Lock. "The lamp and table didn't move." Open the Objects panel and remove the table.
+7. **Same product twice (5 s).** Pick Floor Lamp again: it becomes floor-lamp-002.
+8. **Exit and reuse (10 s).** Exit AR → "Last AR session: 2 objects" → Open in 3D composer → Send to SmartFit plan → SmartFit checks collisions and the walkway.
+
+**iPhone / laptop version:** use the 3D room composer on the same page. Say plainly that it's an interactive 3D scene, not camera AR, because Safari has no WebXR AR and Quick Look shows one model per launch.
+
+## Viva questions (MultiPlace)
+
+**31. How is MultiPlace different from opening AR several times?**
+Native viewers show one model per launch and forget it when you close them. MultiPlace keeps one WebXR session and one scene and adds objects to it, so earlier pieces stay placed while you add more.
+
+**32. How do you keep objects independent?**
+Each instance is an entry in a Map keyed by a unique instance ID with its own position, rotation, scale and state. Only the one object in `preview` or `moving` state follows the reticle; locked objects ignore every edit except their own anchor pose updates.
+
+**33. What happens to the lamp when you pick a chair?**
+Nothing. Picking a product only creates a new preview instance. An unplaced preview of another product would be discarded, but placed and locked objects are untouched. This is a unit-tested rule.
+
+**34. How are two chairs different objects if they use the same model file?**
+The GLB is loaded once and cached; each instance is a separate clone (SkeletonUtils.clone) in its own pivot group with its own transform and selection ring. Geometry and materials are shared read-only to save memory.
+
+**35. How does tapping select an object in AR?**
+The WebXR select event provides the input source's target ray. ARSpace converts its pose to a ray and raycasts against the placed objects; the closest hit is selected. A tap that hits nothing places the object currently following the reticle.
+
+**36. How does each object stay fixed?**
+When locked, an XRAnchor is created at that object's pose (if the runtime grants anchors) and the object follows only its own anchor. Otherwise its transform stays fixed in the tracked reference space. Unlocking or removing deletes that object's anchor only.
+
+**37. Why isn't there multi-object camera AR on iPhone?**
+Safari doesn't implement WebXR AR, and AR Quick Look takes one model per launch without letting the web page add more. A native ARKit app could do it; inside this web architecture iPhone gets the 3D composer instead, and the UI says so.
+
+**38. Can a saved arrangement be restored in the same physical place later?**
+Not yet. Arrangements store relative positions and can be exported or opened in the composer, but putting them back on the same real spots needs relocalisation or persistent anchors.
+
+**39. Where did the new 3D models come from?**
+Four more from the Khronos glTF sample library (CC BY 4.0) and ten procedural low-poly models built with three.js and exported as GLB (CC0). A unit test checks every product has a valid GLB and that no two products share the same file.

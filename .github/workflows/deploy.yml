@@ -38,7 +38,8 @@ jobs:
       - name: Build for GitHub Pages
         run: npm run build
         env:
-          BASE_PATH: /arspace/
+          # served from https://<user>.github.io/<repository-name>/
+          BASE_PATH: /${{ github.event.repository.name }}/
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
